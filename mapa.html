@@ -165,7 +165,9 @@ function refrescarMapa() {
 };
 
 }
-  }).addTo(map);
+ }).addTo(map);
+
+map.fitBounds(geoLayer.getBounds());
 }
 
 function togglePresentation() {
