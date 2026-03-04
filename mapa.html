@@ -146,10 +146,18 @@ function refrescarMapa() {
           && filtroOrigen[getOrigen(n)]
           && filtroVariedad[getVariedad(n)];
     },
-    style: f => {
-      const v = getVariedad(f.properties?.Name || "");
-      return { color:colorVar[v], fillColor:colorVar[v], weight:1.2, fillOpacity:0.6 };
-    }
+   style: f => {
+
+ const v = getVariedad(f.properties?.Name || "");
+
+ return {
+   color:"#000000",
+   fillColor:colorVar[v],
+   weight:2,
+   fillOpacity:0.85
+ };
+
+}
   }).addTo(map);
 }
 
