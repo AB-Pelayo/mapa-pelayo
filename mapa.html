@@ -166,7 +166,10 @@ fillOpacity:0.9
 }
  }).addTo(map);
 
+if(!window.mapaCentrado){
 map.fitBounds(geoLayer.getBounds());
+window.mapaCentrado = true;
+}
 }
 
 function togglePresentation() {
