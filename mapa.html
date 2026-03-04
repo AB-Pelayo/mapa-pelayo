@@ -228,7 +228,7 @@ function aplicarEventosLote(layer){
   const p = name.split("-").map(s=>s.trim());
 
   const tooltip = "<b>"+(p[0]||"")+"</b><br>"+(p[1]||"")+"<br>"+(p[2]||"");
-  layer.bindTooltip(tooltip,{sticky:true});
+  
 
   try{
     const ha = turf.area(layer.feature)/10000;
