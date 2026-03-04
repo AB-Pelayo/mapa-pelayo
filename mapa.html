@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="utf-8">
 <title>Mapa Pelayo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,28 +20,6 @@ width:100%;
 height:100%;
 }
 
-.control{
-background:white;
-padding:8px;
-font-size:12px;
-max-height:80vh;
-overflow:auto;
-}
-
-.logotipo{
-position:absolute;
-bottom:10px;
-left:10px;
-background:white;
-padding:6px 10px;
-border-radius:6px;
-z-index:1000;
-}
-
-.logotipo img{
-height:40px;
-}
-
 </style>
 
 </head>
@@ -48,10 +27,6 @@ height:40px;
 <body>
 
 <div id="map"></div>
-
-<div class="logotipo">
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Leaf_icon.svg/1024px-Leaf_icon.svg.png">
-</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -61,13 +36,15 @@ var map = L.map('map').setView([-35.5,-63.5],7);
 
 var mapa = L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{attribution:'© OpenStreetMap'}
-).addTo(map);
+{
+attribution:'© OpenStreetMap'
+}).addTo(map);
 
 var satelite = L.tileLayer(
 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-{attribution:'Tiles © Esri'}
-);
+{
+attribution:'Tiles © Esri'
+});
 
 var baseMaps = {
 "Mapa": mapa,
