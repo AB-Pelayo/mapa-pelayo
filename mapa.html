@@ -151,11 +151,11 @@ function refrescarMapa() {
  const v = getVariedad(f.properties?.Name || "");
 
  return {
-   color:"#000000",
+   color:"#111111",
    fillColor:colorVar[v],
-   weight:2,
-   fillOpacity:0.85
- };
+   weight:2.5,
+   fillOpacity:1
+};
 
 }
   }).addTo(map);
