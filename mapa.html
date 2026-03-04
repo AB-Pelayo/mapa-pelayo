@@ -155,13 +155,13 @@ function refrescarMapa() {
     },
    style: f => {
 
- const v = getVariedad(f.properties?.Name || "");
+const v = getVariedad(f.properties?.Name || "");
 
- return {
- color:"#000000",
- fillColor:colorVar[v],
- weight:0.6,
- fillOpacity:0.85
+return {
+color:"#000000",
+fillColor:colorVar[v],
+weight:2,
+fillOpacity:0.9
 };
 
 }
