@@ -6,10 +6,10 @@
   "background_color": "#ffffff",
   "theme_color": "#2e7d32",
   "icons": [
-  {
-    "src": "logo - mapa-Pelayo Semilla25-26.jpeg",
-    "sizes": "512x512",
-    "type": "image/jpeg"
-  }
-]
+    {
+      "src": "logo - mapa-Pelayo Semilla25-26.jpeg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
 }
