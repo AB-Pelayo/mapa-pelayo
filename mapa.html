@@ -236,15 +236,52 @@ fetch("lotes.geojson")
   .then(response => response.json())
   .then(data => {
 
+    function colorVariedad(nombre) {
+
+      if (!nombre) return "#3388ff";
+
+      if (nombre.includes("DM")) return "#e41a1c";
+      if (nombre.includes("NA")) return "#377eb8";
+      if (nombre.includes("SYN")) return "#4daf4a";
+
+      return "#984ea3";
+    }
+
     L.geoJSON(data, {
+
+      style: function(feature) {
+        return {
+          color: colorVariedad(feature.properties.Name),
+          weight: 2,
+          fillOpacity: 0.35
+        };
+      },
+
       onEachFeature: function(feature, layer) {
         if (feature.properties && feature.properties.Name) {
           layer.bindPopup(feature.properties.Name);
         }
       }
+
     }).addTo(map);
 
   });
+  var legend = L.control({position: 'topright'});
+
+legend.onAdd = function(map) {
+
+  var div = L.DomUtil.create('div', 'legend');
+
+  div.innerHTML =
+    '<b>Variedades</b><br>' +
+    '<i style="background:#e41a1c"></i> DM<br>' +
+    '<i style="background:#377eb8"></i> NA<br>' +
+    '<i style="background:#4daf4a"></i> SYN<br>';
+
+  return div;
+};
+
+legend.addTo(map);
 // filtros
 let filtroSemilla = { ORIGINAL:true, PREBASICA:false };
 let filtroOrigen  = { PROPIOS:true, TERCEROS:false };
