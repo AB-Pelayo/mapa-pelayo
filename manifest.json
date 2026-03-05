@@ -6,10 +6,10 @@
   "background_color": "#ffffff",
   "theme_color": "#2e7d32",
   "icons": [
-    {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Leaf_icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    }
-  ]
+  {
+    "src": "logo - mapa-Pelayo Semilla25-26.jpeg",
+    "sizes": "512x512",
+    "type": "image/jpeg"
+  }
+]
 }
