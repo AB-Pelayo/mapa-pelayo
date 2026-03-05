@@ -122,8 +122,26 @@ html, body { height:100%; margin:0; }
     <button onclick="checkLogin()">Ingresar</button>
 
     <p id="error" style="color:red;"></p>
-  </div>
+ </div>
 </div>
+
+<script>
+function checkLogin(){
+
+  var pass = document.getElementById("password").value;
+
+  if(pass === "pelayo2026"){
+
+    document.getElementById("loginScreen").style.display = "none";
+
+  }else{
+
+    document.getElementById("error").innerText = "Contraseña incorrecta";
+
+  }
+
+}
+</script>
 
 <div id="map"></div>
 <div id="searchBox" style="position:absolute;bottom:25px;left:140px;
