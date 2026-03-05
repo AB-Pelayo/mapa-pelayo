@@ -469,7 +469,33 @@ gpsBtn.onclick=function(){
 
  gpsBtn.innerHTML="⏺ GPS activo";
 
- watchId = navigator.geolocation.watchPosition(function(pos){
+ watchId = navigator.geolocation.watchPosition(
+function(pos){
+
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+
+  if(gpsMarker){ map.removeLayer(gpsMarker); }
+
+  gpsMarker = L.circleMarker([lat,lon],{
+    radius:8,
+    color:"#007bff",
+    fillColor:"#007bff",
+    fillOpacity:0.9
+  }).addTo(map).bindPopup("Tu ubicación");
+
+  map.setView([lat,lon],17);
+
+},
+function(err){
+  console.log("Error GPS:",err);
+},
+{
+  enableHighAccuracy:true,
+  maximumAge:0,
+  timeout:10000
+}
+);
 
    const lat=pos.coords.latitude;
    const lon=pos.coords.longitude;
