@@ -1,128 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
 <meta charset="utf-8">
-<title>Mapa Soja - Campaña 25/26 | Pelayo Agronomía</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Semilla 25/26 | Pelayo Agronomía</title>
 
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/jpeg" href="logo_pelayo.jpeg">
-
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css">
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
 <style>
-html, body { height:100%; margin:0; }
-#map { width:100%; height:100%; }
+html,body{height:100%;margin:0;}
+#map{width:100%;height:100%;}
 
-.control {
-  background:white;
-  padding:8px;
-  font-size:12px;
-  max-height:80vh;
-  overflow:auto;
-}
-
-.var-color {
-  display:inline-block;
-  width:12px;
-  height:12px;
-  margin-right:6px;
-  vertical-align:middle;
-}
-  .legend {
-  background: white;
-  padding: 8px;
-  line-height: 18px;
-  color: #333;
-  border-radius: 5px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.2);
+.control{
+background:white;
+padding:8px;
+font-size:12px;
+max-height:80vh;
+overflow:auto;
+box-shadow:0 0 6px rgba(0,0,0,0.3);
+border-radius:6px;
 }
 
-.legend i {
-  width: 18px;
-  height: 18px;
-  float: left;
-  margin-right: 8px;
-  opacity: 0.8;
+.legend{
+background:white;
+padding:8px;
+border-radius:6px;
+box-shadow:0 0 6px rgba(0,0,0,0.3);
 }
 
-.logo {
-  position:absolute;
-  bottom:10px;
-  left:10px;
-  background:white;
-  padding:6px 10px;
-  border-radius:6px;
-  z-index:1000;
-  pointer-events:none;
+.legend i{
+width:18px;
+height:18px;
+float:left;
+margin-right:8px;
+opacity:0.8;
 }
 
-.logo img { height:40px; }
-
-.presentation-toggle {
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:white;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:12px;
-  z-index:1000;
-}
-  #loginScreen{
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#2e7d32;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
+.var-color{
+display:inline-block;
+width:12px;
+height:12px;
+margin-right:6px;
 }
 
-.login-box{
-  background:white;
-  padding:30px;
-  border-radius:10px;
-  text-align:center;
-  width:260px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-}
-
-.login-box input{
-  width:100%;
-  padding:10px;
-  margin:12px 0;
-  border:1px solid #ccc;
-  border-radius:6px;
-}
-
-.login-box button{
-  background:#2e7d32;
-  color:white;
-  border:none;
-  padding:10px;
-  width:100%;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.login-box button:hover{
-  background:#1b5e20;
-}
-  #contadorLotes{
+#contadorLotes{
 position:absolute;
 top:70px;
 right:10px;
@@ -134,554 +57,226 @@ z-index:1000;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
 </style>
-<link rel="manifest" href="manifest.json">
 </head>
 
 <body>
 
-<div id="loginScreen">
-  <div class="login-box">
-    <h2>Pelayo Agronomía</h2>
-    <p>Mapa Semilla 25/26</p>
-
-    <input type="password" id="password" placeholder="Contraseña">
-
-    <button onclick="checkLogin()">Ingresar</button>
-
-    <p id="error" style="color:red;"></p>
- </div>
-</div>
-
-<script>
-function checkLogin(){
-
-  var pass = document.getElementById("password").value;
-
-  if(pass === "pelayo2026"){
-
-    document.getElementById("loginScreen").style.display = "none";
-
-  }else{
-
-    document.getElementById("error").innerText = "Contraseña incorrecta";
-
-  }
-
-}
-</script>
-
 <div id="map"></div>
-  <div id="contadorLotes">
-Lotes visibles: 0
-</div>
-<div id="searchBox" style="position:absolute;bottom:25px;left:140px;
-z-index:1000;background:white;padding:6px 12px;border-radius:8px;font-size:14px;
-box-shadow:0 2px 6px rgba(0,0,0,0.3);">
-<input id="campoSearch" placeholder="Buscar campo..." 
-style="border:none;outline:none;width:200px;">
-</div>
-
-
-<div class="presentation-toggle" onclick="togglePresentation()">🎥 Modo presentación</div>
-
-<div class="logo">
-  <img src="data:image/png;base64,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">
-</div>
+<div id="contadorLotes">Lotes visibles: 0</div>
 
 <script>
-const map = L.map("map").setView([-35.3,-63.2],7);
 
-function actualizarContador(){
+const map=L.map("map").setView([-35.3,-63.2],7);
 
-let count = 0;
-
-geoLayer.eachLayer(function(layer){
-
-if(map.hasLayer(layer)){
-count++;
-}
-
-});
-
-document.getElementById("contadorLotes").innerText =
-"Lotes visibles: " + count;
-
-}
-
-// GPS
-L.control.locate({
-    position:"topleft",
-    flyTo:true,
-    keepCurrentZoomLevel:true,
-    locateOptions:{
-        enableHighAccuracy:true
-    },
-    strings:{
-        title:"Ir a mi ubicación"
-    }
-}).addTo(map);
-
-// CAPAS
-
-const mapa = L.tileLayer(
+const mapa=L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{ attribution:"© OpenStreetMap" }
+{attribution:"© OpenStreetMap"}
 );
 
-const satelite = L.tileLayer(
+const satelite=L.tileLayer(
 "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-{ attribution:"© Esri" }
-);
-
-const ndvi = L.tileLayer(
-"https://tiles.maps.eox.at/wms?service=WMS&request=GetMap&layers=s2cloudless_ndvi&styles=&format=image/png&transparent=true&version=1.1.1&width=256&height=256&srs=EPSG:3857&bbox={bbox-epsg-3857}",
-{ attribution:"Sentinel NDVI" }
+{attribution:"© Esri"}
 );
 
 mapa.addTo(map);
 
-const baseMaps = {
-"Mapa": mapa,
-"Satélite": satelite,
-"NDVI": ndvi
-};
-
-L.control.layers(baseMaps).addTo(map);
-
-fetch("lotes.geojson")
-  .then(response => response.json())
-  .then(data => {
-
-    function colorVariedad(variedad) {
-
-  const colores = {
-    "DM38E26": "#e41a1c",  // rojo
-    "DM40R26": "#377eb8",  // azul
-    "DM40E25": "#4daf4a",  // verde
-    "DM46R25": "#984ea3",  // violeta
-    "DM46E25": "#ff7f00",  // naranja
-    "DM47E23": "#ffff33",  // amarillo
-    "DM49R26": "#a65628",  // marrón
-    "DM50E25": "#f781bf"   // rosa
-  };
-
-  return colores[variedad] || "#999999";
-
-}
-
-   let lotesLayer = L.geoJSON(data, {
-
-  style: function(feature) {
-    return {
-      color: "#333",
-      weight: 1,
-      fillOpacity: 0.8,
-      fillColor: colorVariedad(feature.properties.variedad)
-    };
-  },
-
-  onEachFeature: function(feature, layer) {
-
-    if (feature.properties && feature.properties.Name) {
-      layer.bindPopup(feature.properties.Name);
-    }
-
-  }
-
+L.control.layers({
+"Mapa":mapa,
+"Satélite":satelite
 }).addTo(map);
-    function tipoLote(nombre){
-
-  if(!nombre) return "Propios";
-
-  if(nombre.toLowerCase().includes("terceros"))
-    return "Terceros";
-
-  return "Propios";
-
-}
-
-function categoriaSemilla(nombre){
-
-  if(!nombre) return "Prebasicas";
-
-  nombre = nombre.toLowerCase();
-
-  if(nombre.includes("original") || nombre.includes("orig"))
-    return "Originales";
-
-  if(nombre.includes("prebas") || nombre.includes("prebasica"))
-    return "Prebasicas";
-
-  return "Prebasicas";
-
-}
-  
-  var legend = L.control({position: 'topright'});
-
-legend.onAdd = function(map) {
-
-  var div = L.DomUtil.create('div', 'legend');
-
-  div.innerHTML =
-    '<b>Variedades</b><br>' +
-    '<i style="background:#e41a1c"></i> DM<br>' +
-    '<i style="background:#377eb8"></i> NA<br>' +
-    '<i style="background:#4daf4a"></i> SYN<br>';
-
-  return div;
-};
-
-legend.addTo(map);
-// filtros
-let filtroSemilla = { ORIGINAL:true, PREBASICA:false };
-let filtroOrigen  = { PROPIOS:true, TERCEROS:false };
-let filtroVariedad = {};
-
-let presentation = false;
-
-function stripZ(g) {
-  if (g.type === "Polygon")
-    g.coordinates = g.coordinates.map(r => r.map(c => [c[0],c[1]]));
-  if (g.type === "MultiPolygon")
-    g.coordinates = g.coordinates.map(p =>
-      p.map(r => r.map(c => [c[0],c[1]]))
-    );
-  return g;
-}
-
-function getVariedad(n) {
-  const m = n.toUpperCase().replace(/[^A-Z0-9]/g,"").match(/DM\d+[ER]\d+/);
-  return m ? m[0] : "SIN_VARIEDAD";
-}
-
-function getSemilla(n) {
-  const t = n.toUpperCase();
-  if (t.includes("ORIG")) return "ORIGINAL";
-  if (t.includes("PREBAS") || t.includes("PB")) return "PREBASICA";
-  return "OTRA";
-}
-
-function getOrigen(n) {
-  return n.trim().toUpperCase().endsWith("TERCEROS")
-    ? "TERCEROS" : "PROPIOS";
-}
-
-// colores por variedad
-const colores = [
-"#ff00ff",
-"#00ffff",
-"#ff9900",
-"#00ff00",
-"#ff0000",
-"#0099ff",
-"#ffff00",
-"#ff66cc",
-"#66ff66"
-];
-const colorVar = {};
-let idx = 0;
 
 let geoLayer;
 
-geoData.features.forEach(f => {
-  f.geometry = stripZ(f.geometry);
-  const v = getVariedad(f.properties?.Name || "");
-  filtroVariedad[v] = true;
-  if (!colorVar[v]) colorVar[v] = colores[idx++ % colores.length];
+function actualizarContador(){
+
+let count=0;
+
+geoLayer.eachLayer(function(layer){
+if(map.hasLayer(layer)){count++;}
 });
 
-function refrescarMapa() {
-  if (geoLayer) map.removeLayer(geoLayer);
+document.getElementById("contadorLotes").innerText="Lotes visibles: "+count;
 
-  geoLayer = L.geoJSON(geoData, {
-    filter: f => {
-      const n = f.properties?.Name || "";
-      return filtroSemilla[getSemilla(n)]
-          && filtroOrigen[getOrigen(n)]
-          && filtroVariedad[getVariedad(n)];
-    },
-   style: f => {
+}
 
-const v = getVariedad(f.properties?.Name || "");
+fetch("lotes.geojson")
+.then(r=>r.json())
+.then(data=>{
 
-return {
-color:"#000000",
-fillColor:colorVar[v],
-weight:2,
-fillOpacity:0.9
+function colorVariedad(v){
+
+const colores={
+"DM38E26":"#e41a1c",
+"DM40R26":"#377eb8",
+"DM40E25":"#4daf4a",
+"DM46R25":"#984ea3",
+"DM46E25":"#ff7f00",
+"DM47E23":"#ffff33",
+"DM49R26":"#a65628",
+"DM50E25":"#f781bf"
 };
 
-}
- }).addTo(map);
-  actualizarContador();
+return colores[v]||"#999999";
 
-if(!window.mapaCentrado){
-map.fitBounds(geoLayer.getBounds());
-window.mapaCentrado = true;
-}
 }
 
-function togglePresentation() {
-  presentation = !presentation;
-  document.querySelector(".control").style.display =
-    presentation ? "none" : "block";
+function getVariedad(n){
+const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
+return m?m[0]:"SIN";
 }
 
-// panel filtros
-const control = L.control({position:"topright"});
-control.onAdd = () => {
-  const d = L.DomUtil.create("div","control");
-  d.innerHTML = `
+function getSemilla(n){
+n=n.toUpperCase();
+if(n.includes("ORIG")) return "ORIGINAL";
+if(n.includes("PREBAS")) return "PREBASICA";
+return "OTRA";
+}
+
+function getOrigen(n){
+return n.toUpperCase().includes("TERCEROS")?"TERCEROS":"PROPIOS";
+}
+
+let filtroVariedad={};
+let filtroSemilla={ORIGINAL:true,PREBASICA:true};
+let filtroOrigen={PROPIOS:true,TERCEROS:true};
+
+data.features.forEach(f=>{
+const v=getVariedad(f.properties.Name||"");
+filtroVariedad[v]=true;
+});
+
+function refrescarMapa(){
+
+if(geoLayer) map.removeLayer(geoLayer);
+
+geoLayer=L.geoJSON(data,{
+
+filter:f=>{
+const n=f.properties.Name||"";
+return filtroVariedad[getVariedad(n)]
+&& filtroSemilla[getSemilla(n)]
+&& filtroOrigen[getOrigen(n)];
+},
+
+style:f=>{
+const v=getVariedad(f.properties.Name||"");
+return{
+color:"#333",
+weight:1,
+fillOpacity:0.8,
+fillColor:colorVariedad(v)
+};
+},
+
+onEachFeature:(f,l)=>{
+
+const name=f.properties.Name;
+
+try{
+const ha=turf.area(f)/10000;
+l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
+}catch{
+l.bindPopup(name);
+}
+
+}
+
+}).addTo(map);
+
+actualizarContador();
+
+}
+
+refrescarMapa();
+
+const legend=L.control({position:"bottomright"});
+
+legend.onAdd=function(){
+
+const div=L.DomUtil.create("div","legend");
+div.innerHTML="<b>Variedades</b><br>";
+
+Object.keys(filtroVariedad).sort().forEach(v=>{
+div.innerHTML+='<i style="background:'+colorVariedad(v)+'"></i>'+v+"<br>";
+});
+
+return div;
+
+};
+
+legend.addTo(map);
+
+const control=L.control({position:"topright"});
+
+control.onAdd=function(){
+
+const d=L.DomUtil.create("div","control");
+
+d.innerHTML=`
+
 <b>Semilla</b><br>
 <label><input id="s1" type="checkbox" checked> Original</label><br>
-<label><input id="s2" type="checkbox"> Prebásica</label><br><br>
+<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
 
 <b>Origen</b><br>
 <label><input id="o1" type="checkbox" checked> Propios</label><br>
-<label><input id="o2" type="checkbox"> Terceros</label><br><br>
+<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
 
-<b>Variedades</b><div id="vars"></div>
+<b>Variedades</b>
+<div id="vars"></div>
+
 `;
-  return d;
+
+return d;
+
 };
+
 control.addTo(map);
 
-// construir variedades con color
-const cont = document.getElementById("vars");
+const cont=document.getElementById("vars");
+
 Object.keys(filtroVariedad).sort().forEach(v=>{
-  cont.innerHTML += `<label>
-    <input type="checkbox" checked data-v="${v}">
-    <span class="var-color" style="background:${colorVar[v]}"></span>
-    ${v}</label><br>`;
+
+cont.innerHTML+=`
+<label>
+<input type="checkbox" checked data-v="${v}">
+<span class="var-color" style="background:${colorVariedad(v)}"></span>
+${v}
+</label><br>
+`;
+
 });
 
-s1.onchange=e=>{filtroSemilla.ORIGINAL=e.target.checked;refrescarMapa();};
-s2.onchange=e=>{filtroSemilla.PREBASICA=e.target.checked;refrescarMapa();};
-o1.onchange=e=>{filtroOrigen.PROPIOS=e.target.checked;refrescarMapa();};
-o2.onchange=e=>{filtroOrigen.TERCEROS=e.target.checked;refrescarMapa();};
-cont.querySelectorAll("input").forEach(i=>{
-  i.onchange=()=>{filtroVariedad[i.dataset.v]=i.checked;refrescarMapa();};
-});
-
-map.fitBounds(L.geoJSON(geoData).getBounds());
+document.getElementById("s1").onchange=e=>{
+filtroSemilla.ORIGINAL=e.target.checked;
 refrescarMapa();
-</script>
-
-
-<script>
-
-function aplicarEventosLote(layer){
- if(layer.feature && layer.feature.properties && layer.feature.properties.Name){
-
-  const name = layer.feature.properties.Name;
-  const p = name.split("-").map(s=>s.trim());
-
-  const tooltip = "<b>"+(p[0]||"")+"</b><br>"+(p[1]||"")+"<br>"+(p[2]||"");
-  
-
-  try{
-    const ha = turf.area(layer.feature)/10000;
-    layer.bindPopup("<b>"+name+"</b><br>Superficie: "+ha.toFixed(1)+" ha");
-  }catch(e){}
- }
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-
- if(typeof map !== "undefined"){
-
-   // apply events to existing layers
-   map.eachLayer(function(layer){
-     if(layer.feature){
-       aplicarEventosLote(layer);
-     }
-   });
-
-   // apply events whenever new layers are added (filters, terceros, etc)
-   map.on("layeradd", function(e){
-     const layer = e.layer;
-     if(layer && layer.feature){
-       aplicarEventosLote(layer);
-     }
-   });
-
- }
-
- // search
- const input = document.getElementById("campoSearch");
- if(input){
-
-   input.addEventListener("keyup", function(){
-
-     const q = this.value.toLowerCase();
-     const matches = [];
-
-     if(typeof map !== "undefined"){
-
-       map.eachLayer(function(layer){
-
-         if(layer.feature && layer.feature.properties && layer.feature.properties.Name){
-
-           const name = layer.feature.properties.Name.toLowerCase();
-
-           if(layer._path){
-
-             if(q.length>0 && name.includes(q)){
-               layer._path.style.opacity = 1;
-               matches.push(layer);
-             }else{
-               layer._path.style.opacity = q.length>0 ? 0.25 : 1;
-             }
-
-           }
-
-         }
-
-       });
-
-       if(matches.length>0){
-         const group = L.featureGroup(matches);
-         map.fitBounds(group.getBounds(),{padding:[40,40]});
-       }
-
-     }
-
-   });
-
- }
-
-});
-</script>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-
-if(typeof map !== "undefined"){
-
- let baseLayer=null;
- map.eachLayer(function(l){
-   if(l instanceof L.TileLayer && !baseLayer){ baseLayer=l; }
- });
-
- const satellite=L.tileLayer(
- "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
- {attribution:"Tiles © Esri"}
- );
-
- const ndvi=L.tileLayer.wms(
- "https://tiles.maps.eox.at/wms",
- {layers:"s2cloudless_ndvi",styles:"ndvi",format:"image/png",transparent:true,attribution:"Sentinel‑2 NDVI"}
- );
-
- if(baseLayer){
-   L.control.layers({"Mapa":baseLayer,"Satélite":satellite,"NDVI":ndvi},{}).addTo(map);
- }
-
- function toggleNDVI(active){
-   map.eachLayer(function(layer){
-     if(layer.feature && layer.setStyle){
-       if(active){ layer.setStyle({fillOpacity:0,weight:2}); }
-       else{ layer.setStyle({fillOpacity:0.7,weight:1}); }
-     }
-   });
- }
-
- ndvi.on("add",()=>toggleNDVI(true));
- ndvi.on("remove",()=>toggleNDVI(false));
-
-}
-
-// ---- GPS seguimiento en tiempo real ----
-let watchId=null;
-let gpsMarker=null;
-
-const gpsBtn=document.createElement("div");
-gpsBtn.innerHTML="📍 GPS seguimiento";
-gpsBtn.style.position="absolute";
-gpsBtn.style.left="10px";
-gpsBtn.style.top="120px";
-gpsBtn.style.background="white";
-gpsBtn.style.padding="6px 10px";
-gpsBtn.style.borderRadius="6px";
-gpsBtn.style.zIndex="1200";
-gpsBtn.style.boxShadow="0 2px 6px rgba(0,0,0,0.3)";
-gpsBtn.style.cursor="pointer";
-document.body.appendChild(gpsBtn);
-
-gpsBtn.onclick=function(){
-
- if(!navigator.geolocation){
-   alert("GPS no disponible en este dispositivo");
-   return;
- }
-
- if(watchId!==null){
-   navigator.geolocation.clearWatch(watchId);
-   watchId=null;
-   gpsBtn.innerHTML="📍 GPS seguimiento";
-   return;
- }
-
- gpsBtn.innerHTML="⏺ GPS activo";
-
- watchId = navigator.geolocation.watchPosition(
-function(pos){
-
-  const lat = pos.coords.latitude;
-  const lon = pos.coords.longitude;
-
-  if(gpsMarker){ map.removeLayer(gpsMarker); }
-
-  gpsMarker = L.circleMarker([lat,lon],{
-    radius:8,
-    color:"#007bff",
-    fillColor:"#007bff",
-    fillOpacity:0.9
-  }).addTo(map).bindPopup("Tu ubicación");
-
-  map.setView([lat,lon],17);
-
-},
-function(err){
-  console.log(err);
-},
-{
-  enableHighAccuracy:true,
-  maximumAge:0,
-  timeout:10000
-}
-);
-
-   const lat=pos.coords.latitude;
-   const lon=pos.coords.longitude;
-
-   if(gpsMarker){ map.removeLayer(gpsMarker); }
-
-   gpsMarker=L.circleMarker([lat,lon],{
-     radius:8,
-     color:"#007bff",
-     fillColor:"#007bff",
-     fillOpacity:0.9
-   }).addTo(map).bindPopup("Tu ubicación");
-
-   map.setView([lat,lon],17);
-
- },function(err){
-   alert("El navegador bloqueó el GPS. Abrí el mapa desde HTTPS y aceptá la ubicación.");
- });
-
 };
 
+document.getElementById("s2").onchange=e=>{
+filtroSemilla.PREBASICA=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o1").onchange=e=>{
+filtroOrigen.PROPIOS=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o2").onchange=e=>{
+filtroOrigen.TERCEROS=e.target.checked;
+refrescarMapa();
+};
+
+cont.querySelectorAll("input").forEach(i=>{
+i.onchange=()=>{
+filtroVariedad[i.dataset.v]=i.checked;
+refrescarMapa();
+};
 });
+
+});
+
 </script>
 
-
-<script>
-if('serviceWorker' in navigator){
- navigator.serviceWorker.register('sw.js');
-}
-</script>
 </body>
-
 </html>
