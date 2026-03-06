@@ -113,6 +113,24 @@ box-shadow:0 2px 6px rgba(0,0,0,0.3);
 </head>
 
 <body>
+<!-- PANTALLA DE LOGIN -->
+<div id="loginScreen">
+
+<div id="loginBox">
+
+<img src="logo.pelayo.png" style="width:120px;margin-bottom:20px;">
+
+<h2>Mapa Producción de Semilla</h2>
+
+<input type="password" id="password" placeholder="Ingrese contraseña">
+
+<button onclick="checkLogin()">Entrar</button>
+
+<p id="loginError"></p>
+
+</div>
+
+</div>
 
 <div id="map"></div>
 
@@ -422,6 +440,28 @@ filtros.style.display="block";
 
 }; 
 </script>
+<script>
 
+function checkLogin(){
+
+var pass = document.getElementById("password").value;
+
+if(pass === "pelayo2526"){
+
+document.getElementById("loginScreen").style.display = "none";
+
+}else{
+
+document.getElementById("loginError").innerHTML = "Contraseña incorrecta";
+
+}
+
+}
+
+document.getElementById("password").addEventListener("keydown", function(e){
+if(e.key === "Enter"){checkLogin();}
+});
+
+</script>
 </body>
 </html>
