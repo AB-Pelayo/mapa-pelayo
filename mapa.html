@@ -289,7 +289,33 @@ fetch("lotes.geojson")
   }
 
 }).addTo(map);
-  });
+    function tipoLote(nombre){
+
+  if(!nombre) return "Propios";
+
+  if(nombre.toLowerCase().includes("terceros"))
+    return "Terceros";
+
+  return "Propios";
+
+}
+
+function categoriaSemilla(nombre){
+
+  if(!nombre) return "Prebasicas";
+
+  nombre = nombre.toLowerCase();
+
+  if(nombre.includes("original") || nombre.includes("orig"))
+    return "Originales";
+
+  if(nombre.includes("prebas") || nombre.includes("prebasica"))
+    return "Prebasicas";
+
+  return "Prebasicas";
+
+}
+  
   var legend = L.control({position: 'topright'});
 
 legend.onAdd = function(map) {
