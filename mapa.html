@@ -269,25 +269,26 @@ fetch("lotes.geojson")
 
 }
 
-    L.geoJSON(data, {
+   let lotesLayer = L.geoJSON(data, {
 
-      style: function(feature) {
-  return {
-    color: "#333",
-    weight: 1,
-    fillOpacity: 0.8,
-    fillColor: colorVariedad(feature.properties.variedad)
-  };
-      },
+  style: function(feature) {
+    return {
+      color: "#333",
+      weight: 1,
+      fillOpacity: 0.8,
+      fillColor: colorVariedad(feature.properties.variedad)
+    };
+  },
 
-      onEachFeature: function(feature, layer) {
-        if (feature.properties && feature.properties.Name) {
-          layer.bindPopup(feature.properties.Name);
-        }
-      }
+  onEachFeature: function(feature, layer) {
 
-    }).addTo(map);
+    if (feature.properties && feature.properties.Name) {
+      layer.bindPopup(feature.properties.Name);
+    }
 
+  }
+
+}).addTo(map);
   });
   var legend = L.control({position: 'topright'});
 
