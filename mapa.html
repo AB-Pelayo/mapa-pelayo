@@ -240,22 +240,6 @@ actualizarContador();
 
 refrescarMapa();
 
-const legend=L.control({position:"bottomright"});
-
-legend.onAdd=function(){
-
-const div=L.DomUtil.create("div","legend");
-div.innerHTML="<b>Variedades</b><br>";
-
-Object.keys(filtroVariedad).sort().forEach(v=>{
-div.innerHTML+='<i style="background:'+colorVariedad(v)+'"></i>'+v+"<br>";
-});
-
-return div;
-
-};
-
-legend.addTo(map);
 
 const control=L.control({position:"topright"});
 
