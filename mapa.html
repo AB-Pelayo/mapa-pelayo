@@ -252,16 +252,22 @@ fetch("lotes.geojson")
   .then(response => response.json())
   .then(data => {
 
-    function colorVariedad(nombre) {
+    function colorVariedad(variedad) {
 
-      if (!nombre) return "#3388ff";
+  const colores = {
+    "DM38E26": "#e41a1c",  // rojo
+    "DM40R26": "#377eb8",  // azul
+    "DM40E25": "#4daf4a",  // verde
+    "DM46R25": "#984ea3",  // violeta
+    "DM46E25": "#ff7f00",  // naranja
+    "DM47E23": "#ffff33",  // amarillo
+    "DM49R26": "#a65628",  // marrón
+    "DM50E25": "#f781bf"   // rosa
+  };
 
-      if (nombre.includes("DM")) return "#e41a1c";
-      if (nombre.includes("NA")) return "#377eb8";
-      if (nombre.includes("SYN")) return "#4daf4a";
+  return colores[variedad] || "#999999";
 
-      return "#984ea3";
-    }
+}
 
     L.geoJSON(data, {
 
