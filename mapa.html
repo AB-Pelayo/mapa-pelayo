@@ -266,6 +266,7 @@ const control=L.control({position:"topright"});
 control.onAdd=function(){
 
 const d=L.DomUtil.create("div","control");
+d.id="panelFiltros";
 
 d.innerHTML=`
 
@@ -395,7 +396,7 @@ document.getElementById("btnPresentacion").onclick=function(){
 
 presentacion=!presentacion;
 
-const filtros=document.querySelector(".control");
+const filtros=document.getElementById("panelFiltros");
 
 if(filtros){
 
