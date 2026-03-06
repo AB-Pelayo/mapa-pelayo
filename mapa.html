@@ -290,6 +290,33 @@ filtroVariedad[i.dataset.v]=i.checked;
 refrescarMapa();
 };
 });
+  // BUSCADOR DE CAMPOS
+
+document.getElementById("campoSearch").addEventListener("keyup",function(){
+
+const texto=this.value.toLowerCase();
+
+geoLayer.eachLayer(function(layer){
+
+const name=layer.feature.properties.Name.toLowerCase();
+
+if(name.includes(texto)){
+
+layer.setStyle({weight:3});
+
+try{
+map.fitBounds(layer.getBounds());
+}catch{}
+
+}else{
+
+layer.setStyle({weight:1});
+
+}
+
+});
+
+});
 
 });
 
