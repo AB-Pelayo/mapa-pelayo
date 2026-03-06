@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -150,24 +149,19 @@ border-radius:5px;
 cursor:pointer;
 }
 </style>
-
 </head>
 
 <body>
 
 <!-- LOGIN -->
-
 <div id="loginScreen">
 <div id="loginBox">
 
 <img src="logo.pelayo.png" style="width:120px;margin-bottom:20px;">
-
 <h2>Mapa Producción de Semilla</h2>
 
 <input type="password" id="password" placeholder="Ingrese contraseña">
-
 <button onclick="checkLogin()">Entrar</button>
-
 <p id="loginError"></p>
 
 </div>
@@ -182,8 +176,7 @@ cursor:pointer;
 </div>
 
 <div id="searchBox">
-<input id="campoSearch" placeholder="Buscar campo..."
-style="border:none;outline:none;width:200px;">
+<input id="campoSearch" placeholder="Buscar campo..." style="border:none;outline:none;width:200px;">
 </div>
 
 <div id="modoPresentacion">
@@ -199,11 +192,9 @@ const map=L.map("map").setView([-35.3,-63.2],7);
 const gpsControl=L.control({position:"topleft"});
 
 gpsControl.onAdd=function(){
-
 const div=L.DomUtil.create("div","control");
 div.innerHTML='<button id="gpsBtn">📍 GPS</button>';
 return div;
-
 };
 
 gpsControl.addTo(map);
@@ -228,15 +219,11 @@ L.control.layers({
 let geoLayer;
 
 function actualizarContador(){
-
 let count=0;
-
 geoLayer.eachLayer(function(layer){
 if(map.hasLayer(layer)){count++;}
 });
-
 document.getElementById("contadorLotes").innerText="Lotes visibles: "+count;
-
 }
 
 fetch("lotes.geojson")
@@ -257,7 +244,6 @@ const colores={
 };
 
 return colores[v]||"#999999";
-
 }
 
 function getVariedad(n){
@@ -324,12 +310,76 @@ l.bindPopup(name);
 }).addTo(map);
 
 actualizarContador();
-
 }
 
 refrescarMapa();
 
+const control=L.control({position:"topright"});
+
+control.onAdd=function(){
+
+const d=L.DomUtil.create("div","control");
+d.id="panelFiltros";
+
+d.innerHTML=`
+<b>Semilla</b><br>
+<label><input id="s1" type="checkbox" checked> Original</label><br>
+<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
+
+<b>Origen</b><br>
+<label><input id="o1" type="checkbox" checked> Propios</label><br>
+<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
+
+<b>Variedades</b>
+<div id="vars"></div>
+`;
+
+return d;
+};
+
+control.addTo(map);
+
+const cont=document.getElementById("vars");
+
+Object.keys(filtroVariedad).sort().forEach(v=>{
+cont.innerHTML+=`
+<label>
+<input type="checkbox" checked data-v="${v}">
+<span class="var-color" style="background:${colorVariedad(v)}"></span>
+${v}
+</label><br>
+`;
 });
+
+document.getElementById("s1").onchange=e=>{
+filtroSemilla.ORIGINAL=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("s2").onchange=e=>{
+filtroSemilla.PREBASICA=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o1").onchange=e=>{
+filtroOrigen.PROPIOS=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o2").onchange=e=>{
+filtroOrigen.TERCEROS=e.target.checked;
+refrescarMapa();
+};
+
+cont.querySelectorAll("input").forEach(i=>{
+i.onchange=()=>{
+filtroVariedad[i.dataset.v]=i.checked;
+refrescarMapa();
+};
+});
+
+});
+
 /* BUSCADOR */
 
 document.getElementById("campoSearch").addEventListener("keyup",function(){
@@ -381,6 +431,26 @@ map.on("locationerror",function(){
 alert("No se pudo obtener tu ubicación");
 });
 
+/* PRESENTACION */
+
+let presentacion=false;
+
+document.getElementById("btnPresentacion").onclick=function(){
+
+presentacion=!presentacion;
+
+const filtros=document.getElementById("panelFiltros");
+
+if(filtros){
+if(presentacion){
+filtros.style.display="none";
+}else{
+filtros.style.display="block";
+}
+}
+
+};
+
 /* LOGIN */
 
 function checkLogin(){
@@ -403,3 +473,4 @@ if(e.key==="Enter"){checkLogin();}
 
 </body>
 </html>
+
