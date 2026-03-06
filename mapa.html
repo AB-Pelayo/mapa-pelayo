@@ -47,6 +47,22 @@ border-radius:8px;
 font-size:14px;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
+ #modoPresentacion{
+position:absolute;
+top:10px;
+left:60px;
+z-index:1000;
+}
+
+#btnPresentacion{
+background:white;
+border:none;
+padding:6px 10px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+font-size:13px;
+cursor:pointer;
+} 
 
 .legend{
 background:white;
@@ -98,7 +114,11 @@ box-shadow:0 2px 6px rgba(0,0,0,0.3);
 <input id="campoSearch" placeholder="Buscar campo..."
 style="border:none;outline:none;width:200px;">
 </div>
-
+  
+<div id="modoPresentacion">
+<button id="btnPresentacion">🖥️ Presentación</button>
+</div>
+  
 <script>
 
 const map=L.map("map").setView([-35.3,-63.2],7);
@@ -368,6 +388,31 @@ map.on("locationerror",function(){
 alert("No se pudo obtener tu ubicación");
 
 });
+  let presentacion=false;
+
+document.getElementById("btnPresentacion").onclick=function(){
+
+presentacion=!presentacion;
+
+const filtros=document.querySelector(".control");
+const buscador=document.getElementById("searchBox");
+const contador=document.getElementById("contadorLotes");
+
+if(presentacion){
+
+if(filtros) filtros.style.display="none";
+if(buscador) buscador.style.display="none";
+if(contador) contador.style.display="none";
+
+}else{
+
+if(filtros) filtros.style.display="block";
+if(buscador) buscador.style.display="block";
+if(contador) contador.style.display="block";
+
+}
+
+};
 </script>
 
 </body>
