@@ -233,11 +233,28 @@ L.control.layers({
 let geoLayer;
 
 function actualizarContador(){
-let count=0;
+
+let count = 0;
+let totalHa = 0;
+
 geoLayer.eachLayer(function(layer){
-if(map.hasLayer(layer)){count++;}
+
+if(map.hasLayer(layer)){
+
+count++;
+
+try{
+const ha = turf.area(layer.feature)/10000;
+totalHa += ha;
+}catch{}
+
+}
+
 });
-document.getElementById("contadorLotes").innerText="Lotes visibles: "+count;
+
+document.getElementById("contadorLotes").innerText =
+"Lotes: " + count + " | Ha: " + totalHa.toFixed(0);
+
 }
 
 fetch("lotes.geojson")
