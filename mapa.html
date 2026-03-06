@@ -89,6 +89,22 @@ style="border:none;outline:none;width:200px;">
 
 const map=L.map("map").setView([-35.3,-63.2],7);
 
+  // BOTON GPS
+
+const gpsControl=L.control({position:"topleft"});
+
+gpsControl.onAdd=function(){
+
+const div=L.DomUtil.create("div","control");
+
+div.innerHTML='<button id="gpsBtn">📍 GPS</button>';
+
+return div;
+
+};
+
+gpsControl.addTo(map);
+  
 const mapa=L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 {attribution:"© OpenStreetMap"}
@@ -323,7 +339,37 @@ layer.setStyle({weight:1});
 });
 
 });
+// GPS FUNCION
 
+document.addEventListener("click",function(e){
+
+if(e.target && e.target.id==="gpsBtn"){
+
+map.locate({
+setView:true,
+maxZoom:16
+});
+
+}
+
+});
+
+map.on("locationfound",function(e){
+
+L.circleMarker(e.latlng,{
+radius:8,
+color:"blue",
+fillColor:"blue",
+fillOpacity:0.9
+}).addTo(map);
+
+});
+
+map.on("locationerror",function(){
+
+alert("No se pudo obtener tu ubicación");
+
+});
 </script>
 
 </body>
