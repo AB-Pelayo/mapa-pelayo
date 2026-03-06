@@ -197,7 +197,10 @@ cursor:pointer;
 <script>
 
 const map=L.map("map").setView([-35.3,-63.2],7);
-
+setTimeout(function(){
+map.invalidateSize();
+},200);
+  
 /* BOTON GPS */
 
 const gpsControl=L.control({position:"topleft"});
