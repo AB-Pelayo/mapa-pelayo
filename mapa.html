@@ -67,6 +67,17 @@ top:10px;
 left:60px;
 z-index:1000;
 }
+ #coordsMouse{
+position:absolute;
+bottom:10px;
+right:10px;
+background:white;
+padding:6px 10px;
+border-radius:6px;
+font-size:13px;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+z-index:1000;
+} 
 
 #btnPresentacion{
 background:white;
@@ -181,7 +192,9 @@ cursor:pointer;
 <div id="map"></div>
 
 <div id="contadorLotes">Lotes: 0 | Ha: 0</div>
-
+  
+<div id="coordsMouse">Lat: - | Lon: -</div>
+  
 <div id="logoPelayo">
 <img src="logo.pelayo.fin.png" alt="Pelayo">
 </div>
@@ -200,6 +213,14 @@ const map=L.map("map").setView([-35.3,-63.2],7);
 setTimeout(function(){
 map.invalidateSize();
 },200);
+
+  map.on("mousemove", function(e){
+
+document.getElementById("coordsMouse").innerHTML =
+"Lat: " + e.latlng.lat.toFixed(5) +
+" | Lon: " + e.latlng.lng.toFixed(5);
+
+});
   
 /* BOTON GPS */
 
