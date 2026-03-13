@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -67,7 +68,8 @@ top:10px;
 left:60px;
 z-index:1000;
 }
- #coordsMouse{
+
+#coordsMouse{
 position:absolute;
 bottom:10px;
 right:10px;
@@ -77,7 +79,7 @@ border-radius:6px;
 font-size:13px;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 z-index:1000;
-} 
+}
 
 #btnPresentacion{
 background:white;
@@ -122,106 +124,28 @@ font-size:14px;
 z-index:1000;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
-
-/* LOGIN */
-
-#loginScreen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.85);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:99999;
-}
-
-#loginBox{
-background:white;
-padding:40px;
-border-radius:10px;
-text-align:center;
-width:380px;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
-}
-
-#loginBox h2{
-margin-top:10px;
-font-size:22px;
-}
-
-#loginBox input{
-width:100%;
-padding:10px;
-margin-top:15px;
-border:1px solid #ccc;
-border-radius:5px;
-}
-
-#loginBox button{
-margin-top:15px;
-padding:10px;
-width:100%;
-background:#2e7d32;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
 </style>
+
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen">
-<div id="loginBox">
-
-<img src="logo.pelayo.fin.png" style="width:140px;margin-bottom:20px;">
-<h2>Mapa Producción de Semilla</h2>
-
-<input type="password" id="password" placeholder="Ingrese contraseña">
-<button onclick="checkLogin()">Entrar</button>
-<p id="loginError"></p>
-
-</div>
-</div>
-
 <div id="map"></div>
 
-<div id="contadorLotes">Lotes: 0 | Ha: 0</div>
-  
-<div id="coordsMouse">Lat: - | Lon: -</div>
-  
-<div id="logoPelayo">
-<img src="logo.pelayo.fin.png" alt="Pelayo">
-</div>
-
-<div id="searchBox">
-<input id="campoSearch" placeholder="Buscar campo..." style="border:none;outline:none;width:200px;">
-</div>
-
-<div id="modoPresentacion">
-<button id="btnPresentacion">🖥️ Presentación</button>
-</div>
+<div id="coordsMouse">Lat: -- | Lon: --</div>
 
 <script>
 
-const map=L.map("map").setView([-35.3,-63.2],7);
-setTimeout(function(){
-map.invalidateSize();
-},200);
+const map = L.map('map').setView([-37.3,-59.1],7);
 
-  map.on("mousemove", function(e){
+map.on("mousemove", function(e){
 
 document.getElementById("coordsMouse").innerHTML =
 "Lat: " + e.latlng.lat.toFixed(5) +
 " | Lon: " + e.latlng.lng.toFixed(5);
 
 });
-  
+
 /* BOTON GPS */
 
 const gpsControl=L.control({position:"topleft"});
@@ -251,218 +175,42 @@ L.control.layers({
 "Satélite":satelite
 }).addTo(map);
 
-let geoLayer;
+/* GPS CORREGIDO */
 
-function actualizarContador(){
-
-let count = 0;
-let totalHa = 0;
-
-geoLayer.eachLayer(function(layer){
-
-if(map.hasLayer(layer)){
-
-count++;
-
-try{
-const ha = turf.area(layer.feature)/10000;
-totalHa += ha;
-}catch{}
-
-}
-
-});
-
-document.getElementById("contadorLotes").innerText =
-"Lotes: " + count + " | Ha: " + totalHa.toFixed(0);
-
-}
-
-fetch("lotes.geojson")
-.then(r=>r.json())
-.then(data=>{
-
-function colorVariedad(v){
-
-const colores={
-"DM38E26":"#e41a1c",
-"DM40R26":"#377eb8",
-"DM40E25":"#4daf4a",
-"DM46R25":"#984ea3",
-"DM46E25":"#ff7f00",
-"DM47E23":"#ffff33",
-"DM49R26":"#a65628",
-"DM50E25":"#f781bf"
-};
-
-return colores[v]||"#999999";
-}
-
-function getVariedad(n){
-const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
-return m?m[0]:"SIN";
-}
-
-function getSemilla(n){
-n=n.toUpperCase();
-if(n.includes("ORIG")) return "ORIGINAL";
-if(n.includes("PREBAS")) return "PREBASICA";
-return "OTRA";
-}
-
-function getOrigen(n){
-return n.toUpperCase().includes("TERCEROS")?"TERCEROS":"PROPIOS";
-}
-
-let filtroVariedad={};
-let filtroSemilla={ORIGINAL:true,PREBASICA:true};
-let filtroOrigen={PROPIOS:true,TERCEROS:true};
-
-data.features.forEach(f=>{
-const v=getVariedad(f.properties.Name||"");
-filtroVariedad[v]=true;
-});
-
-function refrescarMapa(){
-
-if(geoLayer) map.removeLayer(geoLayer);
-
-geoLayer=L.geoJSON(data,{
-
-filter:f=>{
-const n=f.properties.Name||"";
-return filtroVariedad[getVariedad(n)]
-&& filtroSemilla[getSemilla(n)]
-&& filtroOrigen[getOrigen(n)];
-},
-
-style:f=>{
-const v=getVariedad(f.properties.Name||"");
-return{
-color:"#333",
-weight:1,
-fillOpacity:0.8,
-fillColor:colorVariedad(v)
-};
-},
-
-onEachFeature:(f,l)=>{
-
-const name=f.properties.Name;
-
-try{
-const ha=turf.area(f)/10000;
-l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
-}catch{
-l.bindPopup(name);
-}
-
-}
-
-}).addTo(map);
-
-actualizarContador();
-}
-
-refrescarMapa();
-
-const control=L.control({position:"topright"});
-
-control.onAdd=function(){
-
-const d=L.DomUtil.create("div","control");
-d.id="panelFiltros";
-
-d.innerHTML=`
-<b>Semilla</b><br>
-<label><input id="s1" type="checkbox" checked> Original</label><br>
-<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
-
-<b>Origen</b><br>
-<label><input id="o1" type="checkbox" checked> Propios</label><br>
-<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
-
-<b>Variedades</b>
-<div id="vars"></div>
-`;
-
-return d;
-};
-
-control.addTo(map);
-
-const cont=document.getElementById("vars");
-
-Object.keys(filtroVariedad).sort().forEach(v=>{
-cont.innerHTML+=`
-<label>
-<input type="checkbox" checked data-v="${v}">
-<span class="var-color" style="background:${colorVariedad(v)}"></span>
-${v}
-</label><br>
-`;
-});
-
-document.getElementById("s1").onchange=e=>{
-filtroSemilla.ORIGINAL=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("s2").onchange=e=>{
-filtroSemilla.PREBASICA=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o1").onchange=e=>{
-filtroOrigen.PROPIOS=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o2").onchange=e=>{
-filtroOrigen.TERCEROS=e.target.checked;
-refrescarMapa();
-};
-
-cont.querySelectorAll("input").forEach(i=>{
-i.onchange=()=>{
-filtroVariedad[i.dataset.v]=i.checked;
-refrescarMapa();
-};
-});
-
-});
-
-/* BUSCADOR */
-
-document.getElementById("campoSearch").addEventListener("keyup",function(){
-
-const texto=this.value.toLowerCase();
-
-geoLayer.eachLayer(function(layer){
-
-const name=layer.feature.properties.Name.toLowerCase();
-
-if(name.includes(texto)){
-layer.setStyle({weight:3});
-try{map.fitBounds(layer.getBounds());}catch{}
-}else{
-layer.setStyle({weight:1});
-}
-
-});
-
-});
-
-/* GPS */
+let gpsMarker=null;
+let gpsAccuracyCircle=null;
+let gpsWatching=false;
 
 document.addEventListener("click",function(e){
 
 if(e.target && e.target.id==="gpsBtn"){
 
+const btn=document.getElementById("gpsBtn");
+
+if(!gpsWatching){
+
 map.locate({
+watch:true,
 setView:true,
-maxZoom:16
+maxZoom:16,
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:10000
 });
+
+gpsWatching=true;
+btn.innerText="📍 GPS (activo)";
+
+}else{
+
+map.stopLocate();
+gpsWatching=false;
+btn.innerText="📍 GPS";
+
+if(gpsMarker){map.removeLayer(gpsMarker);gpsMarker=null;}
+if(gpsAccuracyCircle){map.removeLayer(gpsAccuracyCircle);gpsAccuracyCircle=null;}
+
+}
 
 }
 
@@ -470,55 +218,37 @@ maxZoom:16
 
 map.on("locationfound",function(e){
 
-L.circleMarker(e.latlng,{
+if(gpsMarker){
+gpsMarker.setLatLng(e.latlng);
+}else{
+gpsMarker=L.circleMarker(e.latlng,{
 radius:8,
 color:"blue",
 fillColor:"blue",
 fillOpacity:0.9
 }).addTo(map);
+}
+
+if(gpsAccuracyCircle){
+gpsAccuracyCircle.setLatLng(e.latlng).setRadius(e.accuracy);
+}else{
+gpsAccuracyCircle=L.circle(e.latlng,{
+radius:e.accuracy,
+color:"#3f92ff",
+weight:1,
+fillOpacity:0.05
+}).addTo(map);
+}
 
 });
 
 map.on("locationerror",function(){
 alert("No se pudo obtener tu ubicación");
-});
-
-/* PRESENTACION */
-
-let presentacion=false;
-
-document.getElementById("btnPresentacion").onclick=function(){
-
-presentacion=!presentacion;
-
-const filtros=document.getElementById("panelFiltros");
-
-if(filtros){
-if(presentacion){
-filtros.style.display="none";
-}else{
-filtros.style.display="block";
-}
-}
-
-};
-
-/* LOGIN */
-
-function checkLogin(){
-
-var pass=document.getElementById("password").value;
-
-if(pass==="pelayo2526"){
-document.getElementById("loginScreen").style.display="none";
-}else{
-document.getElementById("loginError").innerHTML="Contraseña incorrecta";
-}
-
-}
-
-document.getElementById("password").addEventListener("keydown",function(e){
-if(e.key==="Enter"){checkLogin();}
+gpsWatching=false;
+const btn=document.getElementById("gpsBtn");
+if(btn){btn.innerText="📍 GPS";}
+if(gpsMarker){map.removeLayer(gpsMarker);gpsMarker=null;}
+if(gpsAccuracyCircle){map.removeLayer(gpsAccuracyCircle);gpsAccuracyCircle=null;}
 });
 
 </script>
