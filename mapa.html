@@ -459,27 +459,74 @@ document.addEventListener("click",function(e){
 
 if(e.target && e.target.id==="gpsBtn"){
 
+/* GPS CORREGIDO */
+
+let gpsMarker = null;
+let gpsAccuracyCircle = null;
+let gpsWatching = false;
+
+document.addEventListener("click", function(e){
+
+if(e.target && e.target.id === "gpsBtn"){
+
+const btn = document.getElementById("gpsBtn");
+
+if(!gpsWatching){
+
 map.locate({
+watch:true,
 setView:true,
-maxZoom:16
+maxZoom:16,
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:10000
 });
+
+gpsWatching = true;
+btn.innerText = "📍 GPS (activo)";
+
+}else{
+
+map.stopLocate();
+gpsWatching = false;
+btn.innerText = "📍 GPS";
+
+if(gpsMarker){ map.removeLayer(gpsMarker); gpsMarker = null; }
+if(gpsAccuracyCircle){ map.removeLayer(gpsAccuracyCircle); gpsAccuracyCircle = null; }
+
+}
 
 }
 
 });
 
-map.on("locationfound",function(e){
+map.on("locationfound", function(e){
 
-L.circleMarker(e.latlng,{
+if(gpsMarker){
+gpsMarker.setLatLng(e.latlng);
+}else{
+gpsMarker = L.circleMarker(e.latlng,{
 radius:8,
 color:"blue",
 fillColor:"blue",
 fillOpacity:0.9
 }).addTo(map);
+}
+
+if(gpsAccuracyCircle){
+gpsAccuracyCircle.setLatLng(e.latlng).setRadius(e.accuracy);
+}else{
+gpsAccuracyCircle = L.circle(e.latlng,{
+radius:e.accuracy,
+color:"#3f92ff",
+weight:1,
+fillOpacity:0.05
+}).addTo(map);
+}
 
 });
 
-map.on("locationerror",function(){
+map.on("locationerror", function(){
 alert("No se pudo obtener tu ubicación");
 });
 
