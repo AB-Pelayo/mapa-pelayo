@@ -598,7 +598,9 @@ geoLayer.eachLayer(function(layer){
 const name = layer.feature.properties.Name;
 
 if(name === id){
-
+ 
+layer.unbindTooltip();
+ 
 layer.bindTooltip("✓", {
 permanent: true,
 direction: "center",
