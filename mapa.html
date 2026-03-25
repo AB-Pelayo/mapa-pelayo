@@ -222,7 +222,35 @@ preferCanvas:true
 setTimeout(function(){
 map.invalidateSize();
 },200);
+map.on("zoomend", function(){
 
+if(!geoLayer) return;
+
+geoLayer.eachLayer(function(layer){
+
+const name = layer.feature.properties.Name;
+
+if(lotesCosechados[name]){
+
+if(map.getZoom() >= 12){
+
+layer.bindTooltip("✓", {
+permanent: true,
+direction: "center",
+className: "cosechado-tooltip"
+});
+
+}else{
+
+layer.unbindTooltip();
+
+}
+
+}
+
+});
+});
+ 
   map.on("mousemove", function(e){
 
 document.getElementById("coordsMouse").innerHTML =
