@@ -377,9 +377,12 @@ if(lotesCosechados[name]){
 
 const centro = l.getBounds().getCenter();
 
-L.marker(centro,{
+const marcador = L.marker(centro,{
 icon: iconoCosechado
-}).addTo(map);
+});
+
+marcador.addTo(map);
+l._cosechaMarker = marcador;
 }
 }
 
