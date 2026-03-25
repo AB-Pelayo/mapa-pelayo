@@ -395,9 +395,15 @@ const ha=turf.area(f)/10000;
 const idLote = name;
 
 const boton =
-`<br><button onclick="marcarCosechado('${idLote}')">
+`<br>
+<button onclick="marcarCosechado('${idLote}')">
 🌾 Marcar cosechado
-</button>`;
+</button>
+
+<button onclick="desmarcarCosechado('${idLote}')">
+❌ Desmarcar
+</button>
+`;
 
 l.bindPopup(
 "<b>"+name+"</b><br>"+
