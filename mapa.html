@@ -614,7 +614,28 @@ className: "cosechado-tooltip"
 });
 
 }
+function desmarcarCosechado(id){
 
+delete lotesCosechados[id];
+
+localStorage.setItem(
+"lotesCosechados",
+JSON.stringify(lotesCosechados)
+);
+
+geoLayer.eachLayer(function(layer){
+
+const name = layer.feature.properties.Name;
+
+if(name === id){
+
+layer.unbindTooltip();
+
+}
+
+});
+
+}
 });
 
 }
