@@ -356,7 +356,18 @@ const name=f.properties.Name;
 
 try{
 const ha=turf.area(f)/10000;
-l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
+const idLote = name;
+
+const boton =
+`<br><button onclick="marcarCosechado('${idLote}')">
+🌾 Marcar cosechado
+</button>`;
+
+l.bindPopup(
+"<b>"+name+"</b><br>"+
+ha.toFixed(1)+" ha"+
+boton
+);
 }catch{
 l.bindPopup(name);
 }
@@ -528,7 +539,27 @@ document.getElementById("loginError").innerHTML="Contraseña incorrecta";
 document.getElementById("password").addEventListener("keydown",function(e){
 if(e.key==="Enter"){checkLogin();}
 });
+function marcarCosechado(id){
 
+lotesCosechados[id] = true;
+
+geoLayer.eachLayer(function(layer){
+
+const name = layer.feature.properties.Name;
+
+if(name === id){
+
+const centro = layer.getBounds().getCenter();
+
+L.marker(centro,{
+icon: iconoCosechado
+}).addTo(map);
+
+}
+
+});
+
+}
 </script>
 
 </body>
