@@ -255,7 +255,8 @@ L.control.layers({
 
 let geoLayer;
 
-let lotesCosechados = {};
+let lotesCosechados = JSON.parse(localStorage.getItem("lotesCosechados")) || {};
+
 let iconoCosechado;
 function actualizarContador(){
 
