@@ -369,7 +369,11 @@ actualizarContador();
 }
 
 refrescarMapa();
-
+iconoCosechado = L.divIcon({
+className: "cosechado-icon",
+html: "✓",
+iconSize: [20,20]
+});
 const control=L.control({position:"topright"});
 
 control.onAdd=function(){
