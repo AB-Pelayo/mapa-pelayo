@@ -382,11 +382,14 @@ l.bindPopup(name);
 // Si ya estaba cosechado, dibujar ✓
 if(lotesCosechados[name]){
 
-l.bindTooltip("✓", {
+if(map.getZoom() >= 12){
+
+layer.bindTooltip("✓", {
 permanent: true,
 direction: "center",
 className: "cosechado-tooltip"
 });
+
 }
 }
 
