@@ -561,11 +561,11 @@ const name = layer.feature.properties.Name;
 
 if(name === id){
 
-const centro = layer.getBounds().getCenter();
-
-L.marker(centro,{
-icon: iconoCosechado
-}).addTo(map);
+l.bindTooltip("✓", {
+permanent: true,
+direction: "center",
+className: "cosechado-tooltip"
+});
 
 }
 
