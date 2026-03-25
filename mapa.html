@@ -558,7 +558,10 @@ if(e.key==="Enter"){checkLogin();}
 function marcarCosechado(id){
 
 lotesCosechados[id] = true;
-
+localStorage.setItem(
+"lotesCosechados",
+JSON.stringify(lotesCosechados)
+);
 geoLayer.eachLayer(function(layer){
 
 const name = layer.feature.properties.Name;
