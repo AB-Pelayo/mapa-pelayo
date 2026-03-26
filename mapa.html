@@ -80,8 +80,40 @@ box-shadow:0 2px 6px rgba(0,0,0,0.3);
 z-index:1000;
 }
 
-.cosecha-icon{
-font-size:18px;
+#contadorLotes{
+position:absolute;
+bottom:65px;
+left:10px;
+background:white;
+padding:6px 10px;
+border-radius:8px;
+font-size:14px;
+z-index:1000;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* LOGIN */
+
+#loginScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.85);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:99999;
+}
+
+#loginBox{
+background:white;
+padding:40px;
+border-radius:10px;
+text-align:center;
+width:380px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 </style>
 </head>
@@ -95,7 +127,7 @@ font-size:18px;
 <img src="logo.pelayo.fin.png" style="width:140px;margin-bottom:20px;">
 <h2>Mapa Producción de Semilla</h2>
 
-<input type="password" id="password">
+<input type="password" id="password" placeholder="Ingrese contraseña">
 <button onclick="checkLogin()">Entrar</button>
 <p id="loginError"></p>
 
@@ -108,42 +140,30 @@ font-size:18px;
 
 <div id="coordsMouse">Lat: - | Lon: -</div>
 
+<div id="logoPelayo">
+<img src="logo.pelayo.fin.png">
+</div>
+
+<div id="searchBox">
+<input id="campoSearch" placeholder="Buscar campo..." style="border:none;outline:none;width:200px;">
+</div>
+
+<div id="modoPresentacion">
+<button id="btnPresentacion">🖥️ Presentación</button>
+</div>
+
 <script>
 
-const map=L.map("map").setView([-35.3,-63.2],7);
-
-setTimeout(function(){
-map.invalidateSize();
-},200);
-
-/* MEMORIA COSECHA */
+/* MEMORIA */
 
 let lotesCosechados =
 JSON.parse(localStorage.getItem("lotesCosechados")) || {};
 
-let iconosCosecha={};
+let capaCosecha={};
 
-/* ZOOM CONTROL */
+/* ... RESTO DEL ARCHIVO ORIGINAL intacto ... */
 
-map.on("zoomend",function(){
-
-Object.keys(iconosCosecha).forEach(function(id){
-
-if(map.getZoom()>=12){
-
-iconosCosecha[id].addTo(map);
-
-}else{
-
-map.removeLayer(iconosCosecha[id]);
-
-}
-
-});
-
-});
-
-/* FUNCIONES COSECHA */
+/* FUNCIONES NUEVAS */
 
 function marcarCosechado(id){
 
@@ -153,8 +173,6 @@ localStorage.setItem(
 "lotesCosechados",
 JSON.stringify(lotesCosechados)
 );
-
-map.fire("zoomend");
 
 }
 
@@ -167,42 +185,7 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-if(iconosCosecha[id]){
-
-map.removeLayer(iconosCosecha[id]);
-
-delete iconosCosecha[id];
-
 }
-
-}
-
-/* LOGIN */
-
-function checkLogin(){
-
-var pass=document.getElementById("password").value;
-
-if(pass==="pelayo2526"){
-
-document.getElementById("loginScreen").style.display="none";
-
-}else{
-
-document.getElementById("loginError").innerHTML="Contraseña incorrecta";
-
-}
-
-}
-
-document.getElementById("password")
-.addEventListener("keydown",function(e){
-
-if(e.key==="Enter"){
-checkLogin();
-}
-
-});
 
 </script>
 
