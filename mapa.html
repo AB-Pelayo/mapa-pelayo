@@ -34,80 +34,71 @@ box-shadow:0 0 6px rgba(0,0,0,0.3);
 border-radius:6px;
 }
 
-#contadorLotes{
+#logoPelayo{
 position:absolute;
-bottom:65px;
+bottom:10px;
 left:10px;
+z-index:1000;
+}
+
+#logoPelayo img{
+height:35px;
 background:white;
-padding:6px 10px;
+padding:4px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.25);
+}
+
+#searchBox{
+position:absolute;
+bottom:25px;
+left:180px;
+z-index:1000;
+background:white;
+padding:6px 12px;
 border-radius:8px;
 font-size:14px;
-z-index:1000;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
 
-.cosechado-tooltip{
-background:transparent;
-border:none;
-font-size:16px;
-font-weight:bold;
-color:black;
+#modoPresentacion{
+position:absolute;
+top:10px;
+left:60px;
+z-index:1000;
 }
 
-/* LOGIN */
-
-#loginScreen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.85);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:99999;
-}
-
-#loginBox{
+#coordsMouse{
+position:absolute;
+bottom:10px;
+right:10px;
 background:white;
-padding:40px;
-border-radius:10px;
-text-align:center;
-width:380px;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
+padding:6px 10px;
+border-radius:6px;
+font-size:13px;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+z-index:1000;
 }
 
-#loginBox input{
-width:100%;
-padding:10px;
-margin-top:15px;
-border:1px solid #ccc;
-border-radius:5px;
-}
-
-#loginBox button{
-margin-top:15px;
-padding:10px;
-width:100%;
-background:#2e7d32;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
+.cosechado-tooltip {
+background: transparent;
+border: none;
+font-size: 14px;
+font-weight: bold;
+color: black;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
 <div id="loginBox">
 
+<img src="logo.pelayo.fin.png" style="width:140px;margin-bottom:20px;">
 <h2>Mapa Producción de Semilla</h2>
 
-<input type="password" id="password" placeholder="Ingrese contraseña">
+<input type="password" id="password">
 <button onclick="checkLogin()">Entrar</button>
 <p id="loginError"></p>
 
@@ -117,21 +108,51 @@ cursor:pointer;
 <div id="map"></div>
 
 <div id="contadorLotes">Lotes: 0 | Ha: 0</div>
+<div id="coordsMouse">Lat: - | Lon: -</div>
 
 <script>
 
 const map=L.map("map").setView([-35.3,-63.2],7);
 
-const mapa=L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-).addTo(map);
-
 let geoLayer;
 
-/* 🔵 GUARDADO LOCAL */
+/* 🔵 GUARDADO */
 
 let lotesCosechados =
 JSON.parse(localStorage.getItem("lotesCosechados")) || {};
+
+/* ZOOM CONTROL ✓ */
+
+map.on("zoomend",function(){
+
+if(!geoLayer) return;
+
+geoLayer.eachLayer(function(layer){
+
+const name =
+layer.feature.properties.Name;
+
+if(lotesCosechados[name]){
+
+if(map.getZoom() >= 12){
+
+layer.bindTooltip("✓",{
+permanent:true,
+direction:"center",
+className:"cosechado-tooltip"
+});
+
+}else{
+
+layer.unbindTooltip();
+
+}
+
+}
+
+});
+
+});
 
 /* CONTADOR */
 
@@ -156,7 +177,7 @@ document.getElementById("contadorLotes").innerText=
 
 }
 
-/* CARGAR LOTES */
+/* CARGA LOTES */
 
 fetch("lotes.geojson")
 .then(r=>r.json())
@@ -182,8 +203,6 @@ function getVariedad(n){
 const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
 return m?m[0]:"SIN";
 }
-
-/* CREAR MAPA */
 
 geoLayer=L.geoJSON(data,{
 
@@ -234,15 +253,19 @@ l.bindPopup(name);
 
 }
 
-/* SI YA ESTABA MARCADO */
+/* SI YA ESTABA */
 
 if(lotesCosechados[name]){
+
+if(map.getZoom()>=12){
 
 l.bindTooltip("✓",{
 permanent:true,
 direction:"center",
 className:"cosechado-tooltip"
 });
+
+}
 
 }
 
@@ -265,21 +288,7 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-geoLayer.eachLayer(function(layer){
-
-const name=layer.feature.properties.Name;
-
-if(name===id){
-
-layer.bindTooltip("✓",{
-permanent:true,
-direction:"center",
-className:"cosechado-tooltip"
-});
-
-}
-
-});
+map.fire("zoomend");
 
 }
 
@@ -294,17 +303,7 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-geoLayer.eachLayer(function(layer){
-
-const name=layer.feature.properties.Name;
-
-if(name===id){
-
-layer.unbindTooltip();
-
-}
-
-});
+map.fire("zoomend");
 
 }
 
