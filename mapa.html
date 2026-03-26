@@ -34,83 +34,6 @@ box-shadow:0 0 6px rgba(0,0,0,0.3);
 border-radius:6px;
 }
 
-#logoPelayo{
-position:absolute;
-bottom:10px;
-left:10px;
-z-index:1000;
-}
-
-#logoPelayo img{
-height:35px;
-background:white;
-padding:4px;
-border-radius:6px;
-box-shadow:0 2px 6px rgba(0,0,0,0.25);
-}
-
-#searchBox{
-position:absolute;
-bottom:25px;
-left:180px;
-z-index:1000;
-background:white;
-padding:6px 12px;
-border-radius:8px;
-font-size:14px;
-box-shadow:0 2px 6px rgba(0,0,0,0.3);
-}
-
-#modoPresentacion{
-position:absolute;
-top:10px;
-left:60px;
-z-index:1000;
-}
- #coordsMouse{
-position:absolute;
-bottom:10px;
-right:10px;
-background:white;
-padding:6px 10px;
-border-radius:6px;
-font-size:13px;
-box-shadow:0 2px 6px rgba(0,0,0,0.3);
-z-index:1000;
-} 
-
-#btnPresentacion{
-background:white;
-border:none;
-padding:6px 10px;
-border-radius:6px;
-box-shadow:0 2px 6px rgba(0,0,0,0.3);
-font-size:13px;
-cursor:pointer;
-}
-
-.legend{
-background:white;
-padding:8px;
-border-radius:6px;
-box-shadow:0 0 6px rgba(0,0,0,0.3);
-}
-
-.legend i{
-width:18px;
-height:18px;
-float:left;
-margin-right:8px;
-opacity:0.8;
-}
-
-.var-color{
-display:inline-block;
-width:12px;
-height:12px;
-margin-right:6px;
-}
-
 #contadorLotes{
 position:absolute;
 bottom:65px;
@@ -121,6 +44,14 @@ border-radius:8px;
 font-size:14px;
 z-index:1000;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+
+.cosechado-tooltip{
+background:transparent;
+border:none;
+font-size:16px;
+font-weight:bold;
+color:black;
 }
 
 /* LOGIN */
@@ -145,11 +76,6 @@ border-radius:10px;
 text-align:center;
 width:380px;
 box-shadow:0 10px 30px rgba(0,0,0,0.4);
-}
-
-#loginBox h2{
-margin-top:10px;
-font-size:22px;
 }
 
 #loginBox input{
@@ -179,7 +105,6 @@ cursor:pointer;
 <div id="loginScreen">
 <div id="loginBox">
 
-<img src="logo.pelayo.fin.png" style="width:140px;margin-bottom:20px;">
 <h2>Mapa Producción de Semilla</h2>
 
 <input type="password" id="password" placeholder="Ingrese contraseña">
@@ -192,91 +117,46 @@ cursor:pointer;
 <div id="map"></div>
 
 <div id="contadorLotes">Lotes: 0 | Ha: 0</div>
-  
-<div id="coordsMouse">Lat: - | Lon: -</div>
-  
-<div id="logoPelayo">
-<img src="logo.pelayo.fin.png" alt="Pelayo">
-</div>
-
-<div id="searchBox">
-<input id="campoSearch" placeholder="Buscar campo..." style="border:none;outline:none;width:200px;">
-</div>
-
-<div id="modoPresentacion">
-<button id="btnPresentacion">🖥️ Presentación</button>
-</div>
 
 <script>
 
 const map=L.map("map").setView([-35.3,-63.2],7);
-setTimeout(function(){
-map.invalidateSize();
-},200);
-
-  map.on("mousemove", function(e){
-
-document.getElementById("coordsMouse").innerHTML =
-"Lat: " + e.latlng.lat.toFixed(5) +
-" | Lon: " + e.latlng.lng.toFixed(5);
-
-});
-  
-/* BOTON GPS */
-
-const gpsControl=L.control({position:"topleft"});
-
-gpsControl.onAdd=function(){
-const div=L.DomUtil.create("div","control");
-div.innerHTML='<button id="gpsBtn">📍 GPS</button>';
-return div;
-};
-
-gpsControl.addTo(map);
 
 const mapa=L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{attribution:"© OpenStreetMap"}
-);
-
-const satelite=L.tileLayer(
-"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-{attribution:"© Esri"}
-);
-
-mapa.addTo(map);
-
-L.control.layers({
-"Mapa":mapa,
-"Satélite":satelite
-}).addTo(map);
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+).addTo(map);
 
 let geoLayer;
 
+/* 🔵 GUARDADO LOCAL */
+
+let lotesCosechados =
+JSON.parse(localStorage.getItem("lotesCosechados")) || {};
+
+/* CONTADOR */
+
 function actualizarContador(){
 
-let count = 0;
-let totalHa = 0;
+let count=0;
+let totalHa=0;
 
 geoLayer.eachLayer(function(layer){
-
-if(map.hasLayer(layer)){
 
 count++;
 
 try{
-const ha = turf.area(layer.feature)/10000;
-totalHa += ha;
+const ha=turf.area(layer.feature)/10000;
+totalHa+=ha;
 }catch{}
-
-}
 
 });
 
-document.getElementById("contadorLotes").innerText =
-"Lotes: " + count + " | Ha: " + totalHa.toFixed(0);
+document.getElementById("contadorLotes").innerText=
+"Lotes: "+count+" | Ha: "+totalHa.toFixed(0);
 
 }
+
+/* CARGAR LOTES */
 
 fetch("lotes.geojson")
 .then(r=>r.json())
@@ -295,7 +175,7 @@ const colores={
 "DM50E25":"#f781bf"
 };
 
-return colores[v]||"#999999";
+return colores[v]||"#999";
 }
 
 function getVariedad(n){
@@ -303,47 +183,23 @@ const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
 return m?m[0]:"SIN";
 }
 
-function getSemilla(n){
-n=n.toUpperCase();
-if(n.includes("ORIG")) return "ORIGINAL";
-if(n.includes("PREBAS")) return "PREBASICA";
-return "OTRA";
-}
-
-function getOrigen(n){
-return n.toUpperCase().includes("TERCEROS")?"TERCEROS":"PROPIOS";
-}
-
-let filtroVariedad={};
-let filtroSemilla={ORIGINAL:true,PREBASICA:true};
-let filtroOrigen={PROPIOS:true,TERCEROS:true};
-
-data.features.forEach(f=>{
-const v=getVariedad(f.properties.Name||"");
-filtroVariedad[v]=true;
-});
-
-function refrescarMapa(){
-
-if(geoLayer) map.removeLayer(geoLayer);
+/* CREAR MAPA */
 
 geoLayer=L.geoJSON(data,{
 
-filter:f=>{
-const n=f.properties.Name||"";
-return filtroVariedad[getVariedad(n)]
-&& filtroSemilla[getSemilla(n)]
-&& filtroOrigen[getOrigen(n)];
-},
-
 style:f=>{
-const v=getVariedad(f.properties.Name||"");
+
+const v=getVariedad(
+f.properties.Name||""
+);
+
 return{
 color:"#333",
 weight:1,
 fillOpacity:0.8,
 fillColor:colorVariedad(v)
 };
+
 },
 
 onEachFeature:(f,l)=>{
@@ -351,10 +207,43 @@ onEachFeature:(f,l)=>{
 const name=f.properties.Name;
 
 try{
+
 const ha=turf.area(f)/10000;
-l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
+
+const botones=
+
+`<br>
+<button onclick="marcarCosechado('${name}')">
+🌾 Marcar cosechado
+</button>
+
+<button onclick="desmarcarCosechado('${name}')">
+❌ Desmarcar
+</button>
+`;
+
+l.bindPopup(
+"<b>"+name+"</b><br>"+
+ha.toFixed(1)+" ha"+
+botones
+);
+
 }catch{
+
 l.bindPopup(name);
+
+}
+
+/* SI YA ESTABA MARCADO */
+
+if(lotesCosechados[name]){
+
+l.bindTooltip("✓",{
+permanent:true,
+direction:"center",
+className:"cosechado-tooltip"
+});
+
 }
 
 }
@@ -362,146 +251,62 @@ l.bindPopup(name);
 }).addTo(map);
 
 actualizarContador();
-}
-
-refrescarMapa();
-
-const control=L.control({position:"topright"});
-
-control.onAdd=function(){
-
-const d=L.DomUtil.create("div","control");
-d.id="panelFiltros";
-
-d.innerHTML=`
-<b>Semilla</b><br>
-<label><input id="s1" type="checkbox" checked> Original</label><br>
-<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
-
-<b>Origen</b><br>
-<label><input id="o1" type="checkbox" checked> Propios</label><br>
-<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
-
-<b>Variedades</b>
-<div id="vars"></div>
-`;
-
-return d;
-};
-
-control.addTo(map);
-
-const cont=document.getElementById("vars");
-
-Object.keys(filtroVariedad).sort().forEach(v=>{
-cont.innerHTML+=`
-<label>
-<input type="checkbox" checked data-v="${v}">
-<span class="var-color" style="background:${colorVariedad(v)}"></span>
-${v}
-</label><br>
-`;
-});
-
-document.getElementById("s1").onchange=e=>{
-filtroSemilla.ORIGINAL=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("s2").onchange=e=>{
-filtroSemilla.PREBASICA=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o1").onchange=e=>{
-filtroOrigen.PROPIOS=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o2").onchange=e=>{
-filtroOrigen.TERCEROS=e.target.checked;
-refrescarMapa();
-};
-
-cont.querySelectorAll("input").forEach(i=>{
-i.onchange=()=>{
-filtroVariedad[i.dataset.v]=i.checked;
-refrescarMapa();
-};
-});
 
 });
 
-/* BUSCADOR */
+/* MARCAR */
 
-document.getElementById("campoSearch").addEventListener("keyup",function(){
+function marcarCosechado(id){
 
-const texto=this.value.toLowerCase();
+lotesCosechados[id]=true;
+
+localStorage.setItem(
+"lotesCosechados",
+JSON.stringify(lotesCosechados)
+);
 
 geoLayer.eachLayer(function(layer){
 
-const name=layer.feature.properties.Name.toLowerCase();
+const name=layer.feature.properties.Name;
 
-if(name.includes(texto)){
-layer.setStyle({weight:3});
-try{map.fitBounds(layer.getBounds());}catch{}
-}else{
-layer.setStyle({weight:1});
-}
+if(name===id){
 
-});
-
-});
-
-/* GPS */
-
-document.addEventListener("click",function(e){
-
-if(e.target && e.target.id==="gpsBtn"){
-
-map.locate({
-setView:true,
-maxZoom:16
+layer.bindTooltip("✓",{
+permanent:true,
+direction:"center",
+className:"cosechado-tooltip"
 });
 
 }
 
 });
 
-map.on("locationfound",function(e){
+}
 
-L.circleMarker(e.latlng,{
-radius:8,
-color:"blue",
-fillColor:"blue",
-fillOpacity:0.9
-}).addTo(map);
+/* DESMARCAR */
+
+function desmarcarCosechado(id){
+
+delete lotesCosechados[id];
+
+localStorage.setItem(
+"lotesCosechados",
+JSON.stringify(lotesCosechados)
+);
+
+geoLayer.eachLayer(function(layer){
+
+const name=layer.feature.properties.Name;
+
+if(name===id){
+
+layer.unbindTooltip();
+
+}
 
 });
 
-map.on("locationerror",function(){
-alert("No se pudo obtener tu ubicación");
-});
-
-/* PRESENTACION */
-
-let presentacion=false;
-
-document.getElementById("btnPresentacion").onclick=function(){
-
-presentacion=!presentacion;
-
-const filtros=document.getElementById("panelFiltros");
-
-if(filtros){
-if(presentacion){
-filtros.style.display="none";
-}else{
-filtros.style.display="block";
 }
-}
-
-};
 
 /* LOGIN */
 
@@ -510,15 +315,25 @@ function checkLogin(){
 var pass=document.getElementById("password").value;
 
 if(pass==="pelayo2526"){
+
 document.getElementById("loginScreen").style.display="none";
+
 }else{
+
 document.getElementById("loginError").innerHTML="Contraseña incorrecta";
+
 }
 
 }
 
 document.getElementById("password").addEventListener("keydown",function(e){
-if(e.key==="Enter"){checkLogin();}
+
+if(e.key==="Enter"){
+
+checkLogin();
+
+}
+
 });
 
 </script>
