@@ -170,13 +170,6 @@ border:none;
 border-radius:5px;
 cursor:pointer;
 }
- .cosechado-tooltip {
-background: transparent;
-border: none;
-font-size: 16px;
-font-weight: bold;
-color: black;
-}
 </style>
 </head>
 
@@ -216,39 +209,11 @@ color: black;
 
 <script>
 
-const map = L.map("map",{
-preferCanvas:true
-}).setView([-35.3,-63.2],7);
+const map=L.map("map").setView([-35.3,-63.2],7);
 setTimeout(function(){
 map.invalidateSize();
 },200);
-map.on("zoomend", function(){
 
-if(!geoLayer) return;
-
-geoLayer.eachLayer(function(layer){
-
-const name = layer.feature.properties.Name;
-
-if(lotesCosechados[name]){
-
-if(map.getZoom() >= 12){
-
-layer.bindTooltip("✓", {
-permanent: true,
-direction: "center",
-className: "cosechado-tooltip"
-});
-
-}else{
-
-layer.unbindTooltip();
-
-}
-
-}
-});
-});
   map.on("mousemove", function(e){
 
 document.getElementById("coordsMouse").innerHTML =
@@ -288,11 +253,8 @@ L.control.layers({
 
 let geoLayer;
 
-let lotesCosechados = JSON.parse(localStorage.getItem("lotesCosechados")) || {};
-
-let iconoCosechado;
 function actualizarContador(){
-if(!geoLayer) return;
+
 let count = 0;
 let totalHa = 0;
 
@@ -390,39 +352,11 @@ const name=f.properties.Name;
 
 try{
 const ha=turf.area(f)/10000;
-const idLote = name;
-
-const boton =
-`<br>
-<button onclick="marcarCosechado('${idLote}')">
-🌾 Marcar cosechado
-</button>
-
-<button onclick="desmarcarCosechado('${idLote}')">
-❌ Desmarcar
-</button>
-`;
-
-l.bindPopup(
-"<b>"+name+"</b><br>"+
-ha.toFixed(1)+" ha"+
-boton
-);
+l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
 }catch{
 l.bindPopup(name);
 }
-// Si ya estaba cosechado, dibujar ✓
-if(lotesCosechados[name]){
 
-if(map.getZoom() >= 12){
-
-l.bindTooltip("✓", {
-permanent: true,
-direction: "center",
-className: "cosechado-tooltip"
-});
-
-}
 }
 
 }).addTo(map);
@@ -431,11 +365,7 @@ actualizarContador();
 }
 
 refrescarMapa();
-iconoCosechado = L.divIcon({
-className: "cosechado-icon",
-html: "✓",
-iconSize: [20,20]
-});
+
 const control=L.control({position:"topright"});
 
 control.onAdd=function(){
@@ -590,56 +520,7 @@ document.getElementById("loginError").innerHTML="Contraseña incorrecta";
 document.getElementById("password").addEventListener("keydown",function(e){
 if(e.key==="Enter"){checkLogin();}
 });
-function marcarCosechado(id){
 
-lotesCosechados[id] = true;
-
-localStorage.setItem(
-"lotesCosechados",
-JSON.stringify(lotesCosechados)
-);
-
-geoLayer.eachLayer(function(layer){
-
-const name = layer.feature.properties.Name;
-
-if(name === id){
-
-layer.unbindTooltip();
-
-layer.bindTooltip("✓", {
-permanent: true,
-direction: "center",
-className: "cosechado-tooltip"
-});
-
-}
-
-});
-
-}
-
-function desmarcarCosechado(id){
-
-delete lotesCosechados[id];
-
-localStorage.setItem(
-"lotesCosechados",
-JSON.stringify(lotesCosechados)
-);
-
-geoLayer.eachLayer(function(layer){
-
-const name = layer.feature.properties.Name;
-
-if(name === id){
-
-layer.unbindTooltip();
-
-}
-
-});
-}
 </script>
 
 </body>
