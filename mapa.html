@@ -292,7 +292,7 @@ let lotesCosechados = JSON.parse(localStorage.getItem("lotesCosechados")) || {};
 
 let iconoCosechado;
 function actualizarContador(){
-
+if(!geoLayer) return;
 let count = 0;
 let totalHa = 0;
 
