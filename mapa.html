@@ -80,12 +80,40 @@ box-shadow:0 2px 6px rgba(0,0,0,0.3);
 z-index:1000;
 }
 
-.cosechado-tooltip {
-background: transparent;
-border: none;
-font-size: 14px;
-font-weight: bold;
-color: black;
+#contadorLotes{
+position:absolute;
+bottom:65px;
+left:10px;
+background:white;
+padding:6px 10px;
+border-radius:8px;
+font-size:14px;
+z-index:1000;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* LOGIN */
+
+#loginScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.85);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:99999;
+}
+
+#loginBox{
+background:white;
+padding:40px;
+border-radius:10px;
+text-align:center;
+width:380px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 </style>
 </head>
@@ -116,37 +144,26 @@ const map=L.map("map").setView([-35.3,-63.2],7);
 
 let geoLayer;
 
-/* 🔵 GUARDADO */
+/* 🔵 MEMORIA COSECHA */
 
 let lotesCosechados =
 JSON.parse(localStorage.getItem("lotesCosechados")) || {};
 
-/* ZOOM CONTROL ✓ */
+let capaCosecha={};
+
+/* CONTROL ZOOM */
 
 map.on("zoomend",function(){
 
-if(!geoLayer) return;
+Object.keys(capaCosecha).forEach(function(id){
 
-geoLayer.eachLayer(function(layer){
+if(map.getZoom()>=12){
 
-const name =
-layer.feature.properties.Name;
-
-if(lotesCosechados[name]){
-
-if(map.getZoom() >= 12){
-
-layer.bindTooltip("✓",{
-permanent:true,
-direction:"center",
-className:"cosechado-tooltip"
-});
+capaCosecha[id].addTo(map);
 
 }else{
 
-layer.unbindTooltip();
-
-}
+map.removeLayer(capaCosecha[id]);
 
 }
 
@@ -183,49 +200,11 @@ fetch("lotes.geojson")
 .then(r=>r.json())
 .then(data=>{
 
-function colorVariedad(v){
-
-const colores={
-"DM38E26":"#e41a1c",
-"DM40R26":"#377eb8",
-"DM40E25":"#4daf4a",
-"DM46R25":"#984ea3",
-"DM46E25":"#ff7f00",
-"DM47E23":"#ffff33",
-"DM49R26":"#a65628",
-"DM50E25":"#f781bf"
-};
-
-return colores[v]||"#999";
-}
-
-function getVariedad(n){
-const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
-return m?m[0]:"SIN";
-}
-
 geoLayer=L.geoJSON(data,{
-
-style:f=>{
-
-const v=getVariedad(
-f.properties.Name||""
-);
-
-return{
-color:"#333",
-weight:1,
-fillOpacity:0.8,
-fillColor:colorVariedad(v)
-};
-
-},
 
 onEachFeature:(f,l)=>{
 
 const name=f.properties.Name;
-
-try{
 
 const ha=turf.area(f)/10000;
 
@@ -247,23 +226,26 @@ ha.toFixed(1)+" ha"+
 botones
 );
 
-}catch{
-
-l.bindPopup(name);
-
-}
-
-/* SI YA ESTABA */
+/* SI YA ESTABA MARCADO */
 
 if(lotesCosechados[name]){
 
+const centro =
+l.getBounds().getCenter();
+
+const icono =
+L.divIcon({
+html:"🚜",
+className:"",
+iconSize:[20,20]
+});
+
+capaCosecha[name]=
+L.marker(centro,{icon:icono});
+
 if(map.getZoom()>=12){
 
-l.bindTooltip("✓",{
-permanent:true,
-direction:"center",
-className:"cosechado-tooltip"
-});
+capaCosecha[name].addTo(map);
 
 }
 
@@ -288,7 +270,32 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-map.fire("zoomend");
+geoLayer.eachLayer(function(layer){
+
+if(layer.feature.properties.Name===id){
+
+const centro=
+layer.getBounds().getCenter();
+
+const icono=
+L.divIcon({
+html:"🚜",
+className:"",
+iconSize:[20,20]
+});
+
+capaCosecha[id]=
+L.marker(centro,{icon:icono});
+
+if(map.getZoom()>=12){
+
+capaCosecha[id].addTo(map);
+
+}
+
+}
+
+});
 
 }
 
@@ -303,7 +310,13 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-map.fire("zoomend");
+if(capaCosecha[id]){
+
+map.removeLayer(capaCosecha[id]);
+
+delete capaCosecha[id];
+
+}
 
 }
 
@@ -325,12 +338,11 @@ document.getElementById("loginError").innerHTML="Contraseña incorrecta";
 
 }
 
-document.getElementById("password").addEventListener("keydown",function(e){
+document.getElementById("password")
+.addEventListener("keydown",function(e){
 
 if(e.key==="Enter"){
-
 checkLogin();
-
 }
 
 });
