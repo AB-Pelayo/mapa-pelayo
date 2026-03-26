@@ -80,46 +80,15 @@ box-shadow:0 2px 6px rgba(0,0,0,0.3);
 z-index:1000;
 }
 
-#contadorLotes{
-position:absolute;
-bottom:65px;
-left:10px;
-background:white;
-padding:6px 10px;
-border-radius:8px;
-font-size:14px;
-z-index:1000;
-box-shadow:0 2px 6px rgba(0,0,0,0.3);
-}
-
-/* LOGIN */
-
-#loginScreen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.85);
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:99999;
-}
-
-#loginBox{
-background:white;
-padding:40px;
-border-radius:10px;
-text-align:center;
-width:380px;
-box-shadow:0 10px 30px rgba(0,0,0,0.4);
+.cosecha-icon{
+font-size:18px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen">
 <div id="loginBox">
 
@@ -136,34 +105,37 @@ box-shadow:0 10px 30px rgba(0,0,0,0.4);
 <div id="map"></div>
 
 <div id="contadorLotes">Lotes: 0 | Ha: 0</div>
+
 <div id="coordsMouse">Lat: - | Lon: -</div>
 
 <script>
 
 const map=L.map("map").setView([-35.3,-63.2],7);
 
-let geoLayer;
+setTimeout(function(){
+map.invalidateSize();
+},200);
 
-/* 🔵 MEMORIA COSECHA */
+/* MEMORIA COSECHA */
 
 let lotesCosechados =
 JSON.parse(localStorage.getItem("lotesCosechados")) || {};
 
-let capaCosecha={};
+let iconosCosecha={};
 
-/* CONTROL ZOOM */
+/* ZOOM CONTROL */
 
 map.on("zoomend",function(){
 
-Object.keys(capaCosecha).forEach(function(id){
+Object.keys(iconosCosecha).forEach(function(id){
 
 if(map.getZoom()>=12){
 
-capaCosecha[id].addTo(map);
+iconosCosecha[id].addTo(map);
 
 }else{
 
-map.removeLayer(capaCosecha[id]);
+map.removeLayer(iconosCosecha[id]);
 
 }
 
@@ -171,95 +143,7 @@ map.removeLayer(capaCosecha[id]);
 
 });
 
-/* CONTADOR */
-
-function actualizarContador(){
-
-let count=0;
-let totalHa=0;
-
-geoLayer.eachLayer(function(layer){
-
-count++;
-
-try{
-const ha=turf.area(layer.feature)/10000;
-totalHa+=ha;
-}catch{}
-
-});
-
-document.getElementById("contadorLotes").innerText=
-"Lotes: "+count+" | Ha: "+totalHa.toFixed(0);
-
-}
-
-/* CARGA LOTES */
-
-fetch("lotes.geojson")
-.then(r=>r.json())
-.then(data=>{
-
-geoLayer=L.geoJSON(data,{
-
-onEachFeature:(f,l)=>{
-
-const name=f.properties.Name;
-
-const ha=turf.area(f)/10000;
-
-const botones=
-
-`<br>
-<button onclick="marcarCosechado('${name}')">
-🌾 Marcar cosechado
-</button>
-
-<button onclick="desmarcarCosechado('${name}')">
-❌ Desmarcar
-</button>
-`;
-
-l.bindPopup(
-"<b>"+name+"</b><br>"+
-ha.toFixed(1)+" ha"+
-botones
-);
-
-/* SI YA ESTABA MARCADO */
-
-if(lotesCosechados[name]){
-
-const centro =
-l.getBounds().getCenter();
-
-const icono =
-L.divIcon({
-html:"🚜",
-className:"",
-iconSize:[20,20]
-});
-
-capaCosecha[name]=
-L.marker(centro,{icon:icono});
-
-if(map.getZoom()>=12){
-
-capaCosecha[name].addTo(map);
-
-}
-
-}
-
-}
-
-}).addTo(map);
-
-actualizarContador();
-
-});
-
-/* MARCAR */
+/* FUNCIONES COSECHA */
 
 function marcarCosechado(id){
 
@@ -270,36 +154,9 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-geoLayer.eachLayer(function(layer){
-
-if(layer.feature.properties.Name===id){
-
-const centro=
-layer.getBounds().getCenter();
-
-const icono=
-L.divIcon({
-html:"🚜",
-className:"",
-iconSize:[20,20]
-});
-
-capaCosecha[id]=
-L.marker(centro,{icon:icono});
-
-if(map.getZoom()>=12){
-
-capaCosecha[id].addTo(map);
+map.fire("zoomend");
 
 }
-
-}
-
-});
-
-}
-
-/* DESMARCAR */
 
 function desmarcarCosechado(id){
 
@@ -310,11 +167,11 @@ localStorage.setItem(
 JSON.stringify(lotesCosechados)
 );
 
-if(capaCosecha[id]){
+if(iconosCosecha[id]){
 
-map.removeLayer(capaCosecha[id]);
+map.removeLayer(iconosCosecha[id]);
 
-delete capaCosecha[id];
+delete iconosCosecha[id];
 
 }
 
