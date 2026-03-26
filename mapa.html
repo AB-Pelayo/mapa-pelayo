@@ -67,8 +67,7 @@ top:10px;
 left:60px;
 z-index:1000;
 }
-
-#coordsMouse{
+ #coordsMouse{
 position:absolute;
 bottom:10px;
 right:10px;
@@ -78,6 +77,38 @@ border-radius:6px;
 font-size:13px;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 z-index:1000;
+} 
+
+#btnPresentacion{
+background:white;
+border:none;
+padding:6px 10px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.3);
+font-size:13px;
+cursor:pointer;
+}
+
+.legend{
+background:white;
+padding:8px;
+border-radius:6px;
+box-shadow:0 0 6px rgba(0,0,0,0.3);
+}
+
+.legend i{
+width:18px;
+height:18px;
+float:left;
+margin-right:8px;
+opacity:0.8;
+}
+
+.var-color{
+display:inline-block;
+width:12px;
+height:12px;
+margin-right:6px;
 }
 
 #contadorLotes{
@@ -115,6 +146,30 @@ text-align:center;
 width:380px;
 box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
+
+#loginBox h2{
+margin-top:10px;
+font-size:22px;
+}
+
+#loginBox input{
+width:100%;
+padding:10px;
+margin-top:15px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+#loginBox button{
+margin-top:15px;
+padding:10px;
+width:100%;
+background:#2e7d32;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -137,11 +192,11 @@ box-shadow:0 10px 30px rgba(0,0,0,0.4);
 <div id="map"></div>
 
 <div id="contadorLotes">Lotes: 0 | Ha: 0</div>
-
+  
 <div id="coordsMouse">Lat: - | Lon: -</div>
-
+  
 <div id="logoPelayo">
-<img src="logo.pelayo.fin.png">
+<img src="logo.pelayo.fin.png" alt="Pelayo">
 </div>
 
 <div id="searchBox">
@@ -154,40 +209,320 @@ box-shadow:0 10px 30px rgba(0,0,0,0.4);
 
 <script>
 
-/* MEMORIA */
+const map=L.map("map").setView([-35.3,-63.2],7);
+setTimeout(function(){
+map.invalidateSize();
+},200);
 
-let lotesCosechados =
-JSON.parse(localStorage.getItem("lotesCosechados")) || {};
+  map.on("mousemove", function(e){
 
-let capaCosecha={};
+document.getElementById("coordsMouse").innerHTML =
+"Lat: " + e.latlng.lat.toFixed(5) +
+" | Lon: " + e.latlng.lng.toFixed(5);
 
-/* ... RESTO DEL ARCHIVO ORIGINAL intacto ... */
+});
+  
+/* BOTON GPS */
 
-/* FUNCIONES NUEVAS */
+const gpsControl=L.control({position:"topleft"});
 
-function marcarCosechado(id){
+gpsControl.onAdd=function(){
+const div=L.DomUtil.create("div","control");
+div.innerHTML='<button id="gpsBtn">📍 GPS</button>';
+return div;
+};
 
-lotesCosechados[id]=true;
+gpsControl.addTo(map);
 
-localStorage.setItem(
-"lotesCosechados",
-JSON.stringify(lotesCosechados)
+const mapa=L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{attribution:"© OpenStreetMap"}
 );
+
+const satelite=L.tileLayer(
+"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+{attribution:"© Esri"}
+);
+
+mapa.addTo(map);
+
+L.control.layers({
+"Mapa":mapa,
+"Satélite":satelite
+}).addTo(map);
+
+let geoLayer;
+
+function actualizarContador(){
+
+let count = 0;
+let totalHa = 0;
+
+geoLayer.eachLayer(function(layer){
+
+if(map.hasLayer(layer)){
+
+count++;
+
+try{
+const ha = turf.area(layer.feature)/10000;
+totalHa += ha;
+}catch{}
 
 }
 
-function desmarcarCosechado(id){
+});
 
-delete lotesCosechados[id];
-
-localStorage.setItem(
-"lotesCosechados",
-JSON.stringify(lotesCosechados)
-);
+document.getElementById("contadorLotes").innerText =
+"Lotes: " + count + " | Ha: " + totalHa.toFixed(0);
 
 }
+
+fetch("lotes.geojson")
+.then(r=>r.json())
+.then(data=>{
+
+function colorVariedad(v){
+
+const colores={
+"DM38E26":"#e41a1c",
+"DM40R26":"#377eb8",
+"DM40E25":"#4daf4a",
+"DM46R25":"#984ea3",
+"DM46E25":"#ff7f00",
+"DM47E23":"#ffff33",
+"DM49R26":"#a65628",
+"DM50E25":"#f781bf"
+};
+
+return colores[v]||"#999999";
+}
+
+function getVariedad(n){
+const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
+return m?m[0]:"SIN";
+}
+
+function getSemilla(n){
+n=n.toUpperCase();
+if(n.includes("ORIG")) return "ORIGINAL";
+if(n.includes("PREBAS")) return "PREBASICA";
+return "OTRA";
+}
+
+function getOrigen(n){
+return n.toUpperCase().includes("TERCEROS")?"TERCEROS":"PROPIOS";
+}
+
+let filtroVariedad={};
+let filtroSemilla={ORIGINAL:true,PREBASICA:true};
+let filtroOrigen={PROPIOS:true,TERCEROS:true};
+
+data.features.forEach(f=>{
+const v=getVariedad(f.properties.Name||"");
+filtroVariedad[v]=true;
+});
+
+function refrescarMapa(){
+
+if(geoLayer) map.removeLayer(geoLayer);
+
+geoLayer=L.geoJSON(data,{
+
+filter:f=>{
+const n=f.properties.Name||"";
+return filtroVariedad[getVariedad(n)]
+&& filtroSemilla[getSemilla(n)]
+&& filtroOrigen[getOrigen(n)];
+},
+
+style:f=>{
+const v=getVariedad(f.properties.Name||"");
+return{
+color:"#333",
+weight:1,
+fillOpacity:0.8,
+fillColor:colorVariedad(v)
+};
+},
+
+onEachFeature:(f,l)=>{
+
+const name=f.properties.Name;
+
+try{
+const ha=turf.area(f)/10000;
+l.bindPopup("<b>"+name+"</b><br>"+ha.toFixed(1)+" ha");
+}catch{
+l.bindPopup(name);
+}
+
+}
+
+}).addTo(map);
+
+actualizarContador();
+}
+
+refrescarMapa();
+
+const control=L.control({position:"topright"});
+
+control.onAdd=function(){
+
+const d=L.DomUtil.create("div","control");
+d.id="panelFiltros";
+
+d.innerHTML=`
+<b>Semilla</b><br>
+<label><input id="s1" type="checkbox" checked> Original</label><br>
+<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
+
+<b>Origen</b><br>
+<label><input id="o1" type="checkbox" checked> Propios</label><br>
+<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
+
+<b>Variedades</b>
+<div id="vars"></div>
+`;
+
+return d;
+};
+
+control.addTo(map);
+
+const cont=document.getElementById("vars");
+
+Object.keys(filtroVariedad).sort().forEach(v=>{
+cont.innerHTML+=`
+<label>
+<input type="checkbox" checked data-v="${v}">
+<span class="var-color" style="background:${colorVariedad(v)}"></span>
+${v}
+</label><br>
+`;
+});
+
+document.getElementById("s1").onchange=e=>{
+filtroSemilla.ORIGINAL=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("s2").onchange=e=>{
+filtroSemilla.PREBASICA=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o1").onchange=e=>{
+filtroOrigen.PROPIOS=e.target.checked;
+refrescarMapa();
+};
+
+document.getElementById("o2").onchange=e=>{
+filtroOrigen.TERCEROS=e.target.checked;
+refrescarMapa();
+};
+
+cont.querySelectorAll("input").forEach(i=>{
+i.onchange=()=>{
+filtroVariedad[i.dataset.v]=i.checked;
+refrescarMapa();
+};
+});
+
+});
+
+/* BUSCADOR */
+
+document.getElementById("campoSearch").addEventListener("keyup",function(){
+
+const texto=this.value.toLowerCase();
+
+geoLayer.eachLayer(function(layer){
+
+const name=layer.feature.properties.Name.toLowerCase();
+
+if(name.includes(texto)){
+layer.setStyle({weight:3});
+try{map.fitBounds(layer.getBounds());}catch{}
+}else{
+layer.setStyle({weight:1});
+}
+
+});
+
+});
+
+/* GPS */
+
+document.addEventListener("click",function(e){
+
+if(e.target && e.target.id==="gpsBtn"){
+
+map.locate({
+setView:true,
+maxZoom:16
+});
+
+}
+
+});
+
+map.on("locationfound",function(e){
+
+L.circleMarker(e.latlng,{
+radius:8,
+color:"blue",
+fillColor:"blue",
+fillOpacity:0.9
+}).addTo(map);
+
+});
+
+map.on("locationerror",function(){
+alert("No se pudo obtener tu ubicación");
+});
+
+/* PRESENTACION */
+
+let presentacion=false;
+
+document.getElementById("btnPresentacion").onclick=function(){
+
+presentacion=!presentacion;
+
+const filtros=document.getElementById("panelFiltros");
+
+if(filtros){
+if(presentacion){
+filtros.style.display="none";
+}else{
+filtros.style.display="block";
+}
+}
+
+};
+
+/* LOGIN */
+
+function checkLogin(){
+
+var pass=document.getElementById("password").value;
+
+if(pass==="pelayo2526"){
+document.getElementById("loginScreen").style.display="none";
+}else{
+document.getElementById("loginError").innerHTML="Contraseña incorrecta";
+}
+
+}
+
+document.getElementById("password").addEventListener("keydown",function(e){
+if(e.key==="Enter"){checkLogin();}
+});
 
 </script>
 
 </body>
 </html>
+
