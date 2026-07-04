@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa Semilla 25/26 | Pelayo Agronomía</title>
+<title>Mapa Semilla | Pelayo Agronomía</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -123,6 +123,57 @@ z-index:1000;
 box-shadow:0 2px 6px rgba(0,0,0,0.3);
 }
 
+#panelCampana{
+background:white;
+padding:12px 14px;
+font-size:13px;
+box-shadow:0 2px 10px rgba(0,0,0,0.25);
+border-radius:10px;
+min-width:190px;
+}
+
+#panelCampana .campoSelector{
+margin-bottom:10px;
+}
+
+#panelCampana .campoSelector:last-child{
+margin-bottom:0;
+}
+
+#panelCampana label{
+display:flex;
+align-items:center;
+gap:6px;
+font-weight:700;
+font-size:11px;
+letter-spacing:.03em;
+text-transform:uppercase;
+color:#2e7d32;
+margin-bottom:4px;
+}
+
+#panelCampana select{
+width:100%;
+padding:7px 8px;
+font-size:13px;
+border:1px solid #d7d7d7;
+border-radius:6px;
+background:#fafafa;
+color:#222;
+cursor:pointer;
+transition:border-color .15s ease, box-shadow .15s ease;
+}
+
+#panelCampana select:hover{
+border-color:#2e7d32;
+}
+
+#panelCampana select:focus{
+outline:none;
+border-color:#2e7d32;
+box-shadow:0 0 0 3px rgba(46,125,50,0.15);
+}
+
 /* LOGIN */
 
 #loginScreen{
@@ -209,12 +260,95 @@ cursor:pointer;
 
 <script>
 
+/* =========================================================
+   CONFIGURACION DE CAMPAÑAS / CULTIVOS
+   Para agregar una campaña o cultivo nuevo a futuro, alcanza
+   con sumar una linea aca (y subir el geojson correspondiente).
+   ========================================================= */
+
+const campanas = [
+{ campana:"25-26", cultivo:"Soja",  archivo:"lotes.geojson",       parser:parseNombreSoja },
+{ campana:"26",    cultivo:"Trigo", archivo:"lotes_trigo.geojson", parser:parseNombreEstructurado }
+];
+
+/* Parser especifico de Soja (compatibilidad con el mapa original,
+   busca el codigo de variedad tipo DM38E26 en cualquier parte del nombre) */
+function parseNombreSoja(name){
+
+const n=(name||"").toUpperCase();
+const m=n.match(/DM\d+[ER]\d+/);
+const variedad=m?m[0]:"SIN VARIEDAD";
+
+let categoria="OTRA";
+if(n.includes("ORIG")) categoria="ORIGINAL";
+else if(n.includes("PREBAS")) categoria="PREBASICA";
+
+const origen=n.includes("TERCEROS")?"TERCEROS":"PROPIOS";
+
+return{variedad,categoria,origen,cliente:""};
+}
+
+/* Parser generico para nombres con formato:
+   Campo - Lote - Variedad - Categoria - Año - Cliente
+   Sirve para Trigo y para cualquier cultivo nuevo que respete el formato. */
+function parseNombreEstructurado(name){
+
+const partes=(name||"").split(" - ").map(p=>p.trim()).filter(p=>p.length);
+
+if(partes.length>=6){
+
+const cliente=partes[partes.length-1];
+const categoriaRaw=partes[partes.length-3].toUpperCase();
+const variedad=partes[partes.length-4];
+
+let categoria="OTRA";
+if(categoriaRaw.includes("ORIG")) categoria="ORIGINAL";
+else if(categoriaRaw.includes("PREBAS")) categoria="PREBASICA";
+else categoria=categoriaRaw;
+
+const origen=cliente.toUpperCase().includes("PELAYO")?"PROPIOS":"TERCEROS";
+
+return{variedad,categoria,origen,cliente};
+}
+
+return{variedad:"SIN VARIEDAD",categoria:"OTRA",origen:"PROPIOS",cliente:""};
+}
+
+/* Colores fijos para variedades de Soja ya conocidas (se mantienen
+   para no cambiar la apariencia del mapa actual). Cualquier variedad
+   nueva (Trigo u otro cultivo futuro) recibe un color generado
+   automaticamente y estable. */
+const coloresBase={
+"DM38E26":"#e41a1c",
+"DM40R26":"#377eb8",
+"DM40E25":"#4daf4a",
+"DM46R25":"#984ea3",
+"DM46E25":"#ff7f00",
+"DM47E23":"#ffff33",
+"DM49R26":"#a65628",
+"DM50E25":"#f781bf"
+};
+
+function colorVariedad(v){
+
+if(coloresBase[v]) return coloresBase[v];
+
+let hash=0;
+for(let i=0;i<v.length;i++){
+hash=v.charCodeAt(i)+((hash<<5)-hash);
+}
+const hue=Math.abs(hash)%360;
+return `hsl(${hue}, 65%, 45%)`;
+}
+
+/* ========================================================= */
+
 const map=L.map("map").setView([-35.3,-63.2],7);
 setTimeout(function(){
 map.invalidateSize();
 },200);
 
-  map.on("mousemove", function(e){
+map.on("mousemove", function(e){
 
 document.getElementById("coordsMouse").innerHTML =
 "Lat: " + e.latlng.lat.toFixed(5) +
@@ -234,6 +368,28 @@ return div;
 
 gpsControl.addTo(map);
 
+/* SELECTOR DE CAMPAÑA / CULTIVO */
+
+const campanaControl=L.control({position:"topleft"});
+
+campanaControl.onAdd=function(){
+const div=L.DomUtil.create("div","panelCampana");
+L.DomEvent.disableClickPropagation(div);
+div.innerHTML=`
+<div class="campoSelector">
+<label for="selectCultivo">🌾 Cultivo</label>
+<select id="selectCultivo"></select>
+</div>
+<div class="campoSelector">
+<label for="selectCampana">📅 Campaña</label>
+<select id="selectCampana"></select>
+</div>
+`;
+return div;
+};
+
+campanaControl.addTo(map);
+
 const mapa=L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 {attribution:"© OpenStreetMap"}
@@ -252,12 +408,19 @@ L.control.layers({
 }).addTo(map);
 
 let geoLayer;
+let filtroControl;
+let campanaActiva=campanas[0];
+
+let filtroVariedad={};
+let filtroCategoria={};
+let filtroOrigen={};
 
 function actualizarContador(){
 
 let count = 0;
 let totalHa = 0;
 
+if(geoLayer){
 geoLayer.eachLayer(function(layer){
 
 if(map.hasLayer(layer)){
@@ -272,77 +435,33 @@ totalHa += ha;
 }
 
 });
+}
 
 document.getElementById("contadorLotes").innerText =
 "Lotes: " + count + " | Ha: " + totalHa.toFixed(0);
 
 }
 
-fetch("lotes.geojson")
-.then(r=>r.json())
-.then(data=>{
-
-function colorVariedad(v){
-
-const colores={
-"DM38E26":"#e41a1c",
-"DM40R26":"#377eb8",
-"DM40E25":"#4daf4a",
-"DM46R25":"#984ea3",
-"DM46E25":"#ff7f00",
-"DM47E23":"#ffff33",
-"DM49R26":"#a65628",
-"DM50E25":"#f781bf"
-};
-
-return colores[v]||"#999999";
-}
-
-function getVariedad(n){
-const m=n.toUpperCase().match(/DM\d+[ER]\d+/);
-return m?m[0]:"SIN";
-}
-
-function getSemilla(n){
-n=n.toUpperCase();
-if(n.includes("ORIG")) return "ORIGINAL";
-if(n.includes("PREBAS")) return "PREBASICA";
-return "OTRA";
-}
-
-function getOrigen(n){
-return n.toUpperCase().includes("TERCEROS")?"TERCEROS":"PROPIOS";
-}
-
-let filtroVariedad={};
-let filtroSemilla={ORIGINAL:true,PREBASICA:true};
-let filtroOrigen={PROPIOS:true,TERCEROS:true};
-
-data.features.forEach(f=>{
-const v=getVariedad(f.properties.Name||"");
-filtroVariedad[v]=true;
-});
-
-function refrescarMapa(){
+function refrescarMapa(data,parser){
 
 if(geoLayer) map.removeLayer(geoLayer);
 
 geoLayer=L.geoJSON(data,{
 
 filter:f=>{
-const n=f.properties.Name||"";
-return filtroVariedad[getVariedad(n)]
-&& filtroSemilla[getSemilla(n)]
-&& filtroOrigen[getOrigen(n)];
+const info=parser(f.properties.Name||"");
+return filtroVariedad[info.variedad]
+&& filtroCategoria[info.categoria]
+&& filtroOrigen[info.origen];
 },
 
 style:f=>{
-const v=getVariedad(f.properties.Name||"");
+const info=parser(f.properties.Name||"");
 return{
 color:"#333",
 weight:1,
 fillOpacity:0.8,
-fillColor:colorVariedad(v)
+fillColor:colorVariedad(info.variedad)
 };
 },
 
@@ -364,79 +483,204 @@ l.bindPopup(name);
 actualizarContador();
 }
 
-refrescarMapa();
+function construirPanelFiltros(data,parser){
 
-const control=L.control({position:"topright"});
+if(filtroControl){
+map.removeControl(filtroControl);
+filtroControl=null;
+}
 
-control.onAdd=function(){
+filtroVariedad={};
+filtroCategoria={};
+filtroOrigen={};
+
+data.features.forEach(f=>{
+const info=parser(f.properties.Name||"");
+filtroVariedad[info.variedad]=true;
+filtroCategoria[info.categoria]=true;
+filtroOrigen[info.origen]=true;
+});
+
+filtroControl=L.control({position:"topright"});
+
+filtroControl.onAdd=function(){
 
 const d=L.DomUtil.create("div","control");
 d.id="panelFiltros";
+L.DomEvent.disableClickPropagation(d);
+
+let htmlCategoria="";
+Object.keys(filtroCategoria).sort().forEach(c=>{
+htmlCategoria+=`<label><input type="checkbox" checked data-cat="${c}"> ${c}</label><br>`;
+});
+
+let htmlOrigen="";
+Object.keys(filtroOrigen).sort().forEach(o=>{
+htmlOrigen+=`<label><input type="checkbox" checked data-ori="${o}"> ${o}</label><br>`;
+});
+
+let htmlVariedad="";
+Object.keys(filtroVariedad).sort().forEach(v=>{
+htmlVariedad+=`
+<label>
+<input type="checkbox" checked data-v="${v}">
+<span class="var-color" style="background:${colorVariedad(v)}"></span>
+${v}
+</label><br>`;
+});
 
 d.innerHTML=`
-<b>Semilla</b><br>
-<label><input id="s1" type="checkbox" checked> Original</label><br>
-<label><input id="s2" type="checkbox" checked> Prebásica</label><br><br>
-
-<b>Origen</b><br>
-<label><input id="o1" type="checkbox" checked> Propios</label><br>
-<label><input id="o2" type="checkbox" checked> Terceros</label><br><br>
-
+<b>Categoría</b><br>${htmlCategoria}<br>
+<b>Origen</b><br>${htmlOrigen}<br>
 <b>Variedades</b>
-<div id="vars"></div>
+<div id="vars">${htmlVariedad}</div>
 `;
 
 return d;
 };
 
-control.addTo(map);
+filtroControl.addTo(map);
 
-const cont=document.getElementById("vars");
-
-Object.keys(filtroVariedad).sort().forEach(v=>{
-cont.innerHTML+=`
-<label>
-<input type="checkbox" checked data-v="${v}">
-<span class="var-color" style="background:${colorVariedad(v)}"></span>
-${v}
-</label><br>
-`;
+document.querySelectorAll('[data-cat]').forEach(i=>{
+i.onchange=()=>{
+filtroCategoria[i.dataset.cat]=i.checked;
+refrescarMapa(data,parser);
+};
 });
 
-document.getElementById("s1").onchange=e=>{
-filtroSemilla.ORIGINAL=e.target.checked;
-refrescarMapa();
+document.querySelectorAll('[data-ori]').forEach(i=>{
+i.onchange=()=>{
+filtroOrigen[i.dataset.ori]=i.checked;
+refrescarMapa(data,parser);
 };
+});
 
-document.getElementById("s2").onchange=e=>{
-filtroSemilla.PREBASICA=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o1").onchange=e=>{
-filtroOrigen.PROPIOS=e.target.checked;
-refrescarMapa();
-};
-
-document.getElementById("o2").onchange=e=>{
-filtroOrigen.TERCEROS=e.target.checked;
-refrescarMapa();
-};
-
-cont.querySelectorAll("input").forEach(i=>{
+document.querySelectorAll('[data-v]').forEach(i=>{
 i.onchange=()=>{
 filtroVariedad[i.dataset.v]=i.checked;
-refrescarMapa();
+refrescarMapa(data,parser);
 };
 });
 
+/* respeta el modo presentacion si estaba activo */
+if(presentacion) d.style.display="none";
+
+}
+
+function cargarCampana(entry){
+
+campanaActiva=entry;
+
+fetch(entry.archivo)
+.then(r=>r.json())
+.then(data=>{
+construirPanelFiltros(data,entry.parser);
+refrescarMapa(data,entry.parser);
+})
+.catch(err=>{
+console.error("No se pudo cargar "+entry.archivo,err);
+alert("No se pudo cargar el archivo "+entry.archivo);
 });
+
+}
+
+/* =========================================================
+   Selectores de Campaña / Cultivo (bidireccionales)
+   Se puede elegir primero Cultivo o primero Campaña, en
+   cualquier orden: cada selector siempre muestra solo las
+   opciones que tienen datos cargados para lo ya elegido en
+   el otro selector.
+   ========================================================= */
+
+function poblarSelectores(){
+
+const selCampana=document.getElementById("selectCampana");
+const selCultivo=document.getElementById("selectCultivo");
+
+/* Cultivos disponibles para la campaña activa */
+const cultivosDeLaCampana=[...new Set(
+campanas.filter(c=>c.campana===campanaActiva.campana).map(c=>c.cultivo)
+)];
+
+/* Campañas disponibles para el cultivo activo */
+const campanasDelCultivo=[...new Set(
+campanas.filter(c=>c.cultivo===campanaActiva.cultivo).map(c=>c.campana)
+)];
+
+selCultivo.innerHTML=cultivosDeLaCampana.map(c=>`<option value="${c}">${c}</option>`).join("");
+selCampana.innerHTML=campanasDelCultivo.map(c=>`<option value="${c}">${c}</option>`).join("");
+
+selCultivo.value=campanaActiva.cultivo;
+selCampana.value=campanaActiva.campana;
+
+}
+
+function onCambioCultivo(){
+
+const selCultivo=document.getElementById("selectCultivo");
+const cultivoElegido=selCultivo.value;
+
+/* Campañas disponibles para el cultivo recien elegido */
+const campanasDisponibles=campanas.filter(c=>c.cultivo===cultivoElegido);
+
+/* si la campaña actual no tiene ese cultivo, se mantiene la
+   mas reciente disponible (ultima del array) para ese cultivo */
+const mantieneCampana=campanasDisponibles.some(c=>c.campana===campanaActiva.campana);
+const nuevaCampana=mantieneCampana?campanaActiva.campana:campanasDisponibles[campanasDisponibles.length-1].campana;
+
+const entry=campanas.find(c=>c.cultivo===cultivoElegido && c.campana===nuevaCampana);
+
+if(entry){
+campanaActiva=entry;
+poblarSelectores();
+cargarCampana(entry);
+}
+
+}
+
+function onCambioCampana(){
+
+const selCampana=document.getElementById("selectCampana");
+const campanaElegida=selCampana.value;
+
+/* Cultivos disponibles para la campaña recien elegida */
+const cultivosDisponibles=campanas.filter(c=>c.campana===campanaElegida);
+
+const mantieneCultivo=cultivosDisponibles.some(c=>c.cultivo===campanaActiva.cultivo);
+const nuevoCultivo=mantieneCultivo?campanaActiva.cultivo:cultivosDisponibles[0].cultivo;
+
+const entry=campanas.find(c=>c.campana===campanaElegida && c.cultivo===nuevoCultivo);
+
+if(entry){
+campanaActiva=entry;
+poblarSelectores();
+cargarCampana(entry);
+}
+
+}
+
+document.addEventListener("change",function(e){
+
+if(e.target && e.target.id==="selectCultivo"){
+onCambioCultivo();
+}
+
+if(e.target && e.target.id==="selectCampana"){
+onCambioCampana();
+}
+
+});
+
+poblarSelectores();
+cargarCampana(campanaActiva);
 
 /* BUSCADOR */
 
 document.getElementById("campoSearch").addEventListener("keyup",function(){
 
 const texto=this.value.toLowerCase();
+
+if(!geoLayer) return;
 
 geoLayer.eachLayer(function(layer){
 
