@@ -373,7 +373,8 @@ gpsControl.addTo(map);
 const campanaControl=L.control({position:"topleft"});
 
 campanaControl.onAdd=function(){
-const div=L.DomUtil.create("div","panelCampana");
+const div=L.DomUtil.create("div","");
+div.id="panelCampana";
 L.DomEvent.disableClickPropagation(div);
 div.innerHTML=`
 <div class="campoSelector">
@@ -769,4 +770,3 @@ if(e.key==="Enter"){checkLogin();}
 
 </body>
 </html>
-
